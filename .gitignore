@@ -1,5 +1,7 @@
 Build/
 .vs/
+External/oidn/
+External/*.zip
 
 CMakeCache.txt
 CMakeFiles/

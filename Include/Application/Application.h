@@ -1,7 +1,5 @@
 #pragma once
-#include "Window/Window.h"
-#include "Window/Camera.h"
-#include "Window/Scene.h"
+#include "Window.h"
 
 class Application
 {

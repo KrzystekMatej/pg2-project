@@ -22,6 +22,6 @@ public:
     static void log(LogLevel level, const std::string& message);
 
 private:
-    static std::string getLevelString(LogLevel level);
-    static std::mutex mutex_;
+    static std::string GetLevelString(LogLevel level);
+    static std::mutex m_Mutex;
 };

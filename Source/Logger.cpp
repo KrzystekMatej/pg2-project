@@ -1,12 +1,12 @@
-#include "Application/Logger.h"
+#include "Logger.h"
 
-std::mutex Logger::mutex_;
+std::mutex Logger::m_Mutex;
 
 void Logger::log(LogLevel level, const std::string& message)
 {
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::lock_guard<std::mutex> lock(m_Mutex);
 
-    std::string levelStr = getLevelString(level);
+    std::string levelStr = GetLevelString(level);
     std::string logMessage = "[" + levelStr + "] " + message;
 
     std::cout << logMessage << "\n";
@@ -19,7 +19,7 @@ void Logger::log(LogLevel level, const std::string& message)
     }
 }
 
-std::string Logger::getLevelString(LogLevel level)
+std::string Logger::GetLevelString(LogLevel level)
 {
     switch (level)
     {

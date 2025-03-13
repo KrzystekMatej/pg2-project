@@ -1,5 +1,7 @@
 #pragma once
+#include <glad/glad.h>
 #include "Window.h"
+#include <iostream>
 
 class Application
 {
@@ -12,8 +14,6 @@ public:
 	void PrintInfo() const;
 private:
 	Application();
-
-	void InitGlew() const;
 	void TerminateApplication() const;
 
 	std::unique_ptr<Window> m_Window;

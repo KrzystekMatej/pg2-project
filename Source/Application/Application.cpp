@@ -25,8 +25,6 @@ bool Application::Init()
 	if (m_Window)
 	{
 		m_Window->MakeContext(1);
-		InitGlew();
-
 		m_Window->SetCallbacks();
 		return true;
 	}
@@ -53,7 +51,6 @@ void Application::Run()
 void Application::PrintInfo() const
 {
 	std::cout << "OpenGL Version: " << glGetString(GL_VERSION) << std::endl;
-	std::cout << "Using GLEW " << glewGetString(GLEW_VERSION) << std::endl;
 	std::cout << "Vendor " << glGetString(GL_VENDOR) << std::endl;
 	std::cout << "Renderer " << glGetString(GL_RENDERER) << std::endl;
 	std::cout << "GLSL " << glGetString(GL_SHADING_LANGUAGE_VERSION) << std::endl;
@@ -61,12 +58,6 @@ void Application::PrintInfo() const
 	int major, minor, revision;
 	glfwGetVersion(&major, &minor, &revision);
 	std::cout << "Using GLFW " << major << "." << minor << "." << revision << std::endl;
-}
-
-void Application::InitGlew() const
-{
-	glewExperimental = GL_TRUE;
-	glewInit();
 }
 
 void Application::TerminateApplication() const

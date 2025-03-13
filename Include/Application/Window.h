@@ -1,30 +1,31 @@
 #pragma once
 #include <GLFW/glfw3.h>
-#include <glm/glm.hpp>
-#include "Events/InputHandler.h"
+#include <memory>
+#include <glm/vec2.hpp>
 
 class Window
 {
 public:
-	static std::unique_ptr<Window> CreateInstance(int width, int height, const char* title);
-	~Window();
+    static std::unique_ptr<Window> CreateInstance(int width, int height, const char* title);
+    ~Window();
 
-	int GetWidth() const;
-	int GetHeight() const;
-	const char* GetTitle() const;
+    int GetWidth() const { return m_Width; }
+    int GetHeight() const { return m_Height; }
+    const char* GetTitle() const { return m_Title; }
 
-	void MakeContext(int interval) const;
-	bool IsOpen() const;
-	void SwapBuffers() const;
-	void Clear() const;
-	void SetCallbacks() const;
-	glm::vec2 GetCursorPosition() const;
-	void SetCursorPosition(int x, int y) const;
+    void MakeContext(int interval) const;
+    bool IsOpen() const { return !glfwWindowShouldClose(m_Window); }
+    void SwapBuffers() const { glfwSwapBuffers(m_Window); }
+    void Clear() const;
+
+    glm::vec2 GetCursorPosition() const;
+    void SetCursorPosition(int x, int y) const { glfwSetCursorPos(m_Window, x, y); }
+    void SetCallbacks() const;
 private:
-	Window(GLFWwindow* window, int width, int height, const char* title);
+    Window(GLFWwindow* window, int width, int height, const char* title);
 
-	GLFWwindow* m_Window;
-	int m_Width;
-	int m_Height;
-	const char* m_Title;
+    GLFWwindow* m_Window;
+    int m_Width;
+    int m_Height;
+    const char* m_Title;
 };

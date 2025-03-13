@@ -1,4 +1,4 @@
-#include "Application/Window.h"
+#include "Core/Window.h"
 #include "EventSystem/GLFWCallbacks.h"
 
 Window::Window(GLFWwindow* window, int width, int height, const char* title)

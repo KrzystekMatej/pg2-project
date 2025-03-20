@@ -1,4 +1,5 @@
 #include "Systems/RenderSystem.h"
+#include "ECS/Components/Transform.h"
 
 void RenderSystem::Update(const Scene& scene)
 {

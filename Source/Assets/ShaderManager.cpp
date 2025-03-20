@@ -61,7 +61,7 @@ const ShaderProgram* ShaderManager::LoadShaderProgram(const std::string& shaderN
         shaderProgram.DetachShader(shader);
     }
 
-    auto result = m_ShaderCache.emplace(fullPath, std::move(shaderProgram));
+    auto result = m_ShaderCache.emplace(shaderName, std::move(shaderProgram));
     return &result.first->second;
 }
 

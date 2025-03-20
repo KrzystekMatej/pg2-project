@@ -7,7 +7,7 @@
 class Scene
 {
 public:
-    void Initialize(const AssetManager& assetManager);
+    void Initialize(AssetManager& assetManager);
     Entity& AddEntity();
     std::vector<Entity>& GetEntities();
     const std::vector<Entity>& GetEntities() const;

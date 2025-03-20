@@ -11,10 +11,10 @@ VertexArray::~VertexArray()
 	glDeleteVertexArrays(1, &m_VAO);
 }
 
-void VertexArray::AddBuffer(const VertexBuffer& vb, const VertexBufferLayout& layout) const
+void VertexArray::AddBuffer(VertexBuffer&& vertexBuffer, const VertexBufferLayout& layout)
 {
 	Bind();
-	vb.Bind();
+	vertexBuffer.Bind();
 	const auto& elements = layout.GetElements();
 	uint32_t offset = 0;
 	for (std::size_t i = 0; i < elements.size(); i++)
@@ -24,6 +24,7 @@ void VertexArray::AddBuffer(const VertexBuffer& vb, const VertexBufferLayout& la
 		glVertexAttribPointer(i, element.count, element.type, element.normalized, layout.GetStride(), (const void*)offset);
 		offset += element.count * VertexBufferElement::GetSizeOfType(element.type);
 	}
+	m_VertexBuffers.push_back(std::move(vertexBuffer));
 }
 
 void VertexArray::Bind() const

@@ -1,7 +1,7 @@
 #include "Assets/AssetManager.h"
 
 AssetManager::AssetManager()
-	: m_ShaderManager("../../Assets/Shaders/")
+	: m_ShaderManager("../../Assets/Shaders"), m_MeshManager("../../Assets/Meshes")
 {
 
 }

@@ -1,12 +1,19 @@
+#include <glad/glad.h>
 #include "Core/Application.h"
+
+#include <iostream>
+#include <spdlog/spdlog.h>
+
+#include "Core/Time.h"
 
 
 Application::Application() {}
 
 Application* Application::CreateInstance()
 {
-	if (!glfwInit()) {
-		fprintf(stderr, "ERROR: Could not start GLFW3!\n");
+	if (!glfwInit())
+	{
+		spdlog::critical("Could not start GLFW3!");
 		return nullptr;
 	}
 
@@ -20,12 +27,21 @@ Application::~Application()
 
 bool Application::Init()
 {
-	m_Window = Window::CreateInstance(1024, 768, "PG-2");
+	m_Window = Window::CreateInstance(1280, 720, "PG-2");
 
 	if (m_Window)
 	{
 		m_Window->MakeContext(1);
 		m_Window->SetCallbacks();
+
+		if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
+		{
+			spdlog::critical("Failed to initialize GLAD!");
+			return false;
+		}
+
+		//glClipControl(GL_UPPER_LEFT, GL_NEGATIVE_ONE_TO_ONE);
+		m_Scene.Initialize(m_AssetManager);
 		return true;
 	}
 	return false;
@@ -34,30 +50,32 @@ bool Application::Init()
 
 void Application::Run()
 {
-	double lastTime = 0;
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_STENCIL_TEST);
 	glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
 	while (m_Window->IsOpen())
 	{
-		double now = glfwGetTime();
-		double dt = now - lastTime;
-		lastTime = now;
+		Time::Update();
+		glfwPollEvents();
+
+		m_AISystem.Update(m_Scene);
+
 		m_Window->Clear();
+		m_RenderSystem.Update(m_Scene);
 		m_Window->SwapBuffers();
 	}
 }
 
 void Application::PrintInfo() const
 {
-	std::cout << "OpenGL Version: " << glGetString(GL_VERSION) << std::endl;
-	std::cout << "Vendor " << glGetString(GL_VENDOR) << std::endl;
-	std::cout << "Renderer " << glGetString(GL_RENDERER) << std::endl;
-	std::cout << "GLSL " << glGetString(GL_SHADING_LANGUAGE_VERSION) << std::endl;
+	spdlog::info("OpenGL Version: {}", reinterpret_cast<const char*>(glGetString(GL_VERSION)));
+	spdlog::info("Vendor: {}", reinterpret_cast<const char*>(glGetString(GL_VENDOR)));
+	spdlog::info("Renderer: {}", reinterpret_cast<const char*>(glGetString(GL_RENDERER)));
+	spdlog::info("GLSL: {}", reinterpret_cast<const char*>(glGetString(GL_SHADING_LANGUAGE_VERSION)));
 
 	int major, minor, revision;
 	glfwGetVersion(&major, &minor, &revision);
-	std::cout << "Using GLFW " << major << "." << minor << "." << revision << std::endl;
+	spdlog::info("GLFW Version: {}.{}.{}", major, minor, revision);
 }
 
 void Application::TerminateApplication() const

@@ -2,6 +2,7 @@
 #include <GLFW/glfw3.h>
 #include <memory>
 #include <glm/vec2.hpp>
+#include "EventSystem/Events/FrameBufferSizeEvent.h"
 
 class Window
 {
@@ -23,6 +24,7 @@ public:
     void SetCallbacks() const;
 private:
     Window(GLFWwindow* window, int width, int height, const char* title);
+    void OnFrameBufferChanged(const Event& event);
 
     GLFWwindow* m_Window;
     int m_Width;

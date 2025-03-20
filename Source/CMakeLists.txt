@@ -13,6 +13,7 @@ find_package(OpenGL REQUIRED)
 find_package(freeimage CONFIG REQUIRED)
 find_package(glm CONFIG REQUIRED)
 find_package(assimp CONFIG REQUIRED)
+find_package(spdlog CONFIG REQUIRED)
 
 if (WIN32)
     set(OIDN_LIB_NAME "${CMAKE_SOURCE_DIR}/External/oidn/lib/OpenImageDenoise.lib")
@@ -30,6 +31,7 @@ target_link_libraries(RayTracer PRIVATE
     glm::glm-header-only
     assimp::assimp
     ${OIDN_LIB_NAME}
+    spdlog::spdlog
 )
 
 if (WIN32)

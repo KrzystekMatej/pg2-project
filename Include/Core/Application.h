@@ -1,7 +1,9 @@
 #pragma once
-#include <glad/glad.h>
+#include "Systems/RenderSystem.h"
 #include "Window.h"
-#include <iostream>
+#include "Assets/AssetManager.h"
+#include "Scene/Scene.h"
+#include "Systems/AISystem.h"
 
 class Application
 {
@@ -17,5 +19,9 @@ private:
 	void TerminateApplication() const;
 
 	std::unique_ptr<Window> m_Window;
+	Scene m_Scene;
+	AISystem m_AISystem;
+	RenderSystem m_RenderSystem;
+	AssetManager m_AssetManager;
 };
 

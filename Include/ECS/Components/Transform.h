@@ -15,11 +15,11 @@ struct Transform
     glm::mat4 GetMatrix() const
     {
         glm::mat4 matrix = glm::mat4(1.0f);
-        matrix = glm::translate(matrix, Position);
-        matrix = glm::rotate(matrix, glm::radians(Rotation.z), glm::vec3(0, 0, 1));
-        matrix = glm::rotate(matrix, glm::radians(Rotation.y), glm::vec3(0, 1, 0));
-        matrix = glm::rotate(matrix, glm::radians(Rotation.x), glm::vec3(1, 0, 0));
         matrix = glm::scale(matrix, Scale);
+        matrix = glm::rotate(matrix, Rotation.x, glm::vec3(1, 0, 0));
+        matrix = glm::rotate(matrix, Rotation.y, glm::vec3(0, 1, 0));
+        matrix = glm::rotate(matrix, Rotation.z, glm::vec3(0, 0, 1));
+        matrix = glm::translate(matrix, Position);
         return matrix;
     }
 
@@ -27,9 +27,9 @@ struct Transform
     glm::vec3 GetFrontVector() const
     {
         return glm::normalize(glm::vec3(
-            cos(glm::radians(Rotation.y)) * cos(glm::radians(Rotation.x)),
-            sin(glm::radians(Rotation.x)),
-            sin(glm::radians(Rotation.y)) * cos(glm::radians(Rotation.x))
+            cos(Rotation.x) * cos(Rotation.y),
+            sin(Rotation.y),
+            sin(Rotation.x) * cos(Rotation.y)
         ));
     }
 

@@ -8,7 +8,7 @@ public:
         FrameBufferSize,
         MouseButton,
         CursorPosition,
-        Keyboard
+        Key
     };
 
     explicit Event(Type type) : m_Type(type) {}

@@ -15,11 +15,8 @@ void SetGLFWCallbacks(GLFWwindow* window)
 
 void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
-    if (action == GLFW_PRESS || action == GLFW_REPEAT)
-    {
-        KeyEvent event(key, mods);
-        EventDispatcher::DispatchEvent(event);
-    }
+    KeyEvent event(key, scancode, action, mods);
+    EventDispatcher::DispatchEvent(event);
 }
 
 void FramebufferSizeCallback(GLFWwindow* window, int width, int height)

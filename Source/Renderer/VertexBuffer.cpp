@@ -8,6 +8,23 @@ VertexBuffer::VertexBuffer(const void* data, size_t size)
 	glBufferData(GL_ARRAY_BUFFER, size, data, GL_STATIC_DRAW);
 }
 
+VertexBuffer::VertexBuffer(VertexBuffer&& other) noexcept
+    : m_VBO(other.m_VBO)
+{
+    other.m_VBO = 0;
+}
+
+VertexBuffer& VertexBuffer::operator=(VertexBuffer&& other) noexcept
+{
+    if (this != &other)
+    {
+        glDeleteBuffers(1, &m_VBO);
+        m_VBO = other.m_VBO;
+        other.m_VBO = 0;
+    }
+    return *this;
+}
+
 VertexBuffer::~VertexBuffer()
 {
 	glDeleteBuffers(1, &m_VBO);

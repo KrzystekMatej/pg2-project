@@ -6,7 +6,7 @@ class RenderSystem
 {
 public:
 
-    void Update(const Scene& scene);
+    void Draw(Scene& scene) const;
 private:
     Renderer m_Renderer = Renderer(GL_TRIANGLES);//musíš upravit - prozatímní
 };

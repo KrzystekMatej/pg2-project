@@ -1,9 +1,17 @@
 #include "Systems/AISystem.h"
+#include "ECS/Components/Script.h"
 
-void AISystem::Update(Scene& scene)
+void AISystem::Update(Scene& scene) const
 {
-    for (auto& entity : scene.GetEntities())
+    entt::registry& registry = scene.GetRegistry();
+    auto scriptsView = registry.view<Script>();
+
+    for (auto&& [entity, script] : scriptsView.each())
     {
-        entity.UpdateBehaviors();
+        for (Behavior* behavior : script.GetBehaviors())
+        {
+            behavior->Update(entity, registry);
+        }
     }
 }
+

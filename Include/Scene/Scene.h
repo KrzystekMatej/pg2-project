@@ -1,17 +1,18 @@
 #pragma once
 #include <vector>
-
+#include <entt/entt.hpp>
 #include "Assets/AssetManager.h"
-#include "ECS/Entity.h"
+#include "ECS/Behaviors/CameraController.h"
 
 class Scene
 {
 public:
-    void Initialize(AssetManager& assetManager);
-    Entity& AddEntity();
-    std::vector<Entity>& GetEntities();
-    const std::vector<Entity>& GetEntities() const;
-
+    Scene() = default;
+    void Load(AssetManager& assetManager);
+    entt::registry& GetRegistry() { return m_Registry; }
+    const entt::registry& GetRegistry() const { return m_Registry; }
+    entt::entity GetActiveCamera() const { return  m_ActiveCamera; }
 private:
-    std::vector<Entity> m_Entities;
+    entt::registry m_Registry;
+    entt::entity m_ActiveCamera;
 };

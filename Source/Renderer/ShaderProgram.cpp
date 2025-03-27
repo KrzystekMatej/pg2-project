@@ -7,6 +7,25 @@ ShaderProgram::ShaderProgram()
 	m_ProgramID = glCreateProgram();
 }
 
+ShaderProgram::ShaderProgram(ShaderProgram&& other) noexcept
+	: m_ProgramID(other.m_ProgramID), m_UniformLocationCache(std::move(other.m_UniformLocationCache))
+{
+	other.m_ProgramID = 0;
+}
+
+ShaderProgram& ShaderProgram::operator=(ShaderProgram&& other) noexcept
+{
+	if (this != &other)
+	{
+		glDeleteProgram(m_ProgramID);
+		m_ProgramID = other.m_ProgramID;
+		m_UniformLocationCache = std::move(other.m_UniformLocationCache);
+		other.m_ProgramID = 0;
+	}
+	return *this;
+}
+
+
 ShaderProgram::~ShaderProgram()
 {
 	glDeleteProgram(m_ProgramID);

@@ -62,6 +62,7 @@ const Mesh* MeshManager::LoadMesh(const std::string& meshName)
     VertexArray vao;
     vao.Bind();
     vao.AddBuffer(std::move(vertexBuffer), layout);
+    indexBuffer.Bind();
     vao.Unbind();
 
     Mesh newMesh(std::move(vao), std::move(indexBuffer));

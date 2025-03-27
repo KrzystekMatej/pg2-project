@@ -1,14 +1,13 @@
 #pragma once
+#include <glm/glm.hpp>
 #include "Event.h"
 
 class CursorPositionEvent : public Event
 {
 public:
-    CursorPositionEvent(double x, double y) : Event(Type::CursorPosition), m_X(x), m_Y(y) {}
+    CursorPositionEvent(double x, double y) : Event(Type::CursorPosition), m_Position(x, y) {}
 
-    double GetX() const { return m_X; }
-    double GetY() const { return m_Y; }
+    glm::vec2 GetPosition() const { return m_Position; }
 private:
-    double m_X;
-    double m_Y;
+    glm::vec2 m_Position;
 };

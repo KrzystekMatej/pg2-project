@@ -4,5 +4,5 @@
 class AISystem
 {
 public:
-    void Update(Scene& scene);
+    void Update(Scene& scene) const;
 };

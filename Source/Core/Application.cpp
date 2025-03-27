@@ -41,7 +41,7 @@ bool Application::Init()
 		}
 
 		//glClipControl(GL_UPPER_LEFT, GL_NEGATIVE_ONE_TO_ONE);
-		m_Scene.Initialize(m_AssetManager);
+		m_ActiveScene.Load(m_AssetManager);
 		return true;
 	}
 	return false;
@@ -58,10 +58,10 @@ void Application::Run()
 		Time::Update();
 		glfwPollEvents();
 
-		m_AISystem.Update(m_Scene);
+		m_AISystem.Update(m_ActiveScene);
 
 		m_Window->Clear();
-		m_RenderSystem.Update(m_Scene);
+		m_RenderSystem.Draw(m_ActiveScene);
 		m_Window->SwapBuffers();
 	}
 }

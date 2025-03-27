@@ -19,7 +19,7 @@ private:
 	void TerminateApplication() const;
 
 	std::unique_ptr<Window> m_Window;
-	Scene m_Scene;
+	Scene m_ActiveScene;
 	AISystem m_AISystem;
 	RenderSystem m_RenderSystem;
 	AssetManager m_AssetManager;

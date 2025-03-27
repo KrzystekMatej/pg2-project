@@ -6,7 +6,15 @@ class VertexArray
 {
 public:
     VertexArray();
+
+    VertexArray(const VertexArray&) = delete;
+    VertexArray& operator=(const VertexArray&) = delete;
+
+    VertexArray(VertexArray&& other) noexcept;
+    VertexArray& operator=(VertexArray&& other) noexcept;
+
     ~VertexArray();
+
     void AddBuffer(VertexBuffer&& vertexBuffer, const VertexBufferLayout& layout);
     void Bind() const;
     void Unbind() const;

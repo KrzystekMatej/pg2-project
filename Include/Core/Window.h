@@ -24,7 +24,9 @@ public:
     void SetCallbacks() const;
 private:
     Window(GLFWwindow* window, int width, int height, const char* title);
-    void OnFrameBufferChanged(const Event& event);
+    void OnFrameBufferSizeChanged(const Event& event);
+    void OnKeyPressed(const Event& event) const;
+    void OnCursorPositionChanged(const Event& event) const;
 
     GLFWwindow* m_Window;
     int m_Width;

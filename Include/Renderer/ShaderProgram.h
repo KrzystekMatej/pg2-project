@@ -18,6 +18,13 @@ class ShaderProgram
 {
 public:
 	explicit ShaderProgram();
+
+	ShaderProgram(const ShaderProgram&) = delete;
+	ShaderProgram& operator=(const ShaderProgram&) = delete;
+
+	ShaderProgram(ShaderProgram&& other) noexcept;
+	ShaderProgram& operator=(ShaderProgram&& other) noexcept;
+
 	~ShaderProgram();
 
 	void AttachShader(const Shader& shader) const;

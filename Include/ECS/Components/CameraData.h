@@ -4,22 +4,28 @@
 
 struct CameraData
 {
-    CameraData(float fov, int width, int heigth, float nearPlane, float farPlane)
-		: Fov(fov), Width(width), Height(heigth), NearPlane(nearPlane), FarPlane(farPlane) {}
+    CameraData(float fovY, float aspectRatio, float nearPlane, float farPlane)
+		: FovY(fovY), AspectRatio(aspectRatio), NearPlane(nearPlane), FarPlane(farPlane) {}
 
     glm::mat4 GetProjectionMatrix() const
     {
-        return glm::perspective(glm::radians(Fov), static_cast<float>(Width) / static_cast<float>(Height), NearPlane, FarPlane);
+        float f = 1.0f / std::tan(FovY / 2.0f);
+        float a = (NearPlane + FarPlane) / (NearPlane - FarPlane);
+        float b = (2.0f * NearPlane * FarPlane) / (NearPlane - FarPlane);
+
+        float sign = -1.0f;
+
+        return glm::mat4
+    	{
+            f / AspectRatio,    0.0f,       0.0f,   0.0f,
+            0.0f,               sign * f,   0.0f,   0.0f,
+            0.0f,               0.0f,       a,      -1.0f,
+            0.0f,               0.0f,       b,      0.0f
+        };
     }
 
-    glm::mat4 GetViewMatrix(const glm::vec3& position, const glm::vec3& front, const glm::vec3& up) const
-    {
-        return glm::lookAt(position, position + front, up);
-    }
-
-    float Fov;
-    int Width;
-    int Height;
+    float FovY;
+    float AspectRatio;
     float NearPlane;
     float FarPlane;
 };

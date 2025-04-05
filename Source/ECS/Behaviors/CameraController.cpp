@@ -19,56 +19,73 @@ void CameraController::Awake(entt::entity entity, entt::registry& registry)
 	EventDispatcher::AddListener(Event::Type::FrameBufferSize, [this](const Event& event) { OnFrameBufferSizeChanged(event); });
 }
 
-void CameraController::OnKeyPressed(const Event& event) const
+void CameraController::Update(entt::entity entity, entt::registry& registry)
+{
+	glm::vec3 forward = m_Transform->GetForwardVector();
+	glm::vec3 right = glm::normalize(glm::cross(forward, Transform::WorldUp));
+	glm::vec3 up = glm::normalize(glm::cross(right, forward));
+
+	m_Transform->Position += Time::GetDeltaTime() * m_Speed * (forward * m_Input.z + up * m_Input.y + right * m_Input.x);
+}
+
+void CameraController::OnKeyPressed(const Event& event)
 {
 	const auto& keyEvent = static_cast<const KeyEvent&>(event);
-	if (keyEvent.GetAction() == GLFW_RELEASE) return;
-
-	glm::vec3 move(0);
+	if (keyEvent.GetAction() == GLFW_RELEASE)
+	{
+		m_Input = glm::vec3(0.0f);
+		return;
+	}
 
     switch (keyEvent.GetKey())
     {
 		case GLFW_KEY_W:
-			move.z = m_Speed * Time::GetDeltaTime();
+			m_Input.z = 1.0f;
 			break;
 		case GLFW_KEY_S:
-			move.z = -m_Speed * Time::GetDeltaTime();
+			m_Input.z = -1.0f;
 			break;
 		case GLFW_KEY_D:
-			move.x = m_Speed * Time::GetDeltaTime();
+			m_Input.x = 1.0f;
 			break;
 		case GLFW_KEY_A:
-			move.x = -m_Speed * Time::GetDeltaTime();
+			m_Input.x = -1.0f;
+			break;
+		case GLFW_KEY_R:
+			m_Input.y = 1.0f;
+			break;
+		case GLFW_KEY_F:
+			m_Input.y = -1.0f;
 			break;
 		default:
-			return;
+			break;
     }
-
-	glm::vec3 perpVector;
-	perpVector.x = sin(m_Transform->Rotation.x - glm::pi<float>() / 2.0f);
-	perpVector.y = 0;
-	perpVector.z = cos(m_Transform->Rotation.x - glm::pi<float>() / 2.0f);
-
-	glm::vec3 rightVector = glm::normalize(glm::cross(m_Transform->GetFrontVector(), m_Transform->GetUpVector()));
-
-	m_Transform->Position += m_Transform->GetFrontVector() * move.z + rightVector * move.x;
 }
 
 void CameraController::OnCursorPositionChanged(const Event& event) const
 {
-	/*
 	const auto& cursorEvent = static_cast<const CursorPositionEvent&>(event);
-	m_Transform->Rotation.x += (static_cast<float>(m_Camera->Width) / 2.f - cursorEvent.GetPosition().x) * m_MouseSensitivity;
-	m_Transform->Rotation.y += (static_cast<float>(m_Camera->Height) / 2.f - cursorEvent.GetPosition().y) * m_MouseSensitivity;
-	spdlog::info("Rotation x: {}, y: {}", m_Transform->Rotation.x, m_Transform->Rotation.y);
+	glm::vec2 current = cursorEvent.GetPosition();
 
-	if (m_Transform->Rotation.y < -glm::radians(89.9f)) m_Transform->Rotation.x = -glm::radians(89.9f);
-	else if (m_Transform->Rotation.y > glm::radians(89.9f)) m_Transform->Rotation.x = glm::radians(89.9f);*/
+	glm::vec2 center = glm::vec2(static_cast<float>(m_Window.GetWidth()) / 2.0f, static_cast<float>(m_Window.GetHeight()) / 2.0f);
+
+	static bool init = false;
+	if (!init)
+	{
+		center = current;
+		init = true;
+	}
+
+	glm::vec2 delta = (current - center) * m_MouseSensitivity;
+
+	m_Transform->Rotation.y += delta.x;
+	m_Transform->Rotation.x -= delta.y;
+
+	m_Transform->Rotation.x = glm::clamp(m_Transform->Rotation.x, -(glm::half_pi<float>() - 0.1f), glm::half_pi<float>() - 0.1f);
 }
 
 void CameraController::OnFrameBufferSizeChanged(const Event& event) const
 {
 	const auto& frameBufferEvent = static_cast<const FrameBufferSizeEvent&>(event);
-	m_Camera->Width = frameBufferEvent.GetWidth();
-	m_Camera->Height = frameBufferEvent.GetHeight();
+	m_Camera->AspectRatio = static_cast<float>(frameBufferEvent.GetWidth()) / static_cast<float>(frameBufferEvent.GetHeight());
 }

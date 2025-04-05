@@ -9,16 +9,17 @@ class Application
 {
 public:
 	static Application* CreateInstance();
+	Application() = default;
 	~Application();
 
 	bool Init();
 	void Run();
 	void PrintInfo() const;
 private:
-	Application();
+	bool CreateWindow(int width, int height, const char* title);
 	void TerminateApplication() const;
 
-	std::unique_ptr<Window> m_Window;
+	Window m_Window;
 	Scene m_ActiveScene;
 	AISystem m_AISystem;
 	RenderSystem m_RenderSystem;

@@ -21,9 +21,10 @@ const Mesh* MeshManager::LoadMesh(const std::string& meshName)
 
     std::string fullPath = m_MeshDirectory + "/" + meshName;
 
-    uint32_t importOptions = aiProcess_Triangulate
-        | aiProcess_GenNormals
-        | aiProcess_FlipUVs;
+    uint32_t importOptions = aiProcess_OptimizeMeshes
+        | aiProcess_JoinIdenticalVertices
+        | aiProcess_Triangulate
+        | aiProcess_CalcTangentSpace;
 
     Assimp::Importer importer;
     const aiScene* scene = importer.ReadFile

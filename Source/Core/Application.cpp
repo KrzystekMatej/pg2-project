@@ -6,9 +6,6 @@
 
 #include "Core/Time.h"
 
-
-Application::Application() {}
-
 Application* Application::CreateInstance()
 {
 	if (!glfwInit())
@@ -16,6 +13,11 @@ Application* Application::CreateInstance()
 		spdlog::critical("Could not start GLFW3!");
 		return nullptr;
 	}
+
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
+	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+	glfwWindowHint(GLFW_SAMPLES, 8);
 
 	return new Application();
 }
@@ -27,42 +29,48 @@ Application::~Application()
 
 bool Application::Init()
 {
-	m_Window = Window::CreateInstance(1280, 720, "PG-2");
-
-	if (m_Window)
+	if (CreateWindow(1280, 720, "PG-2") && m_Window.MakeContext(1))
 	{
-		m_Window->MakeContext(1);
-		m_Window->SetCallbacks();
-
-		if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
-		{
-			spdlog::critical("Failed to initialize GLAD!");
-			return false;
-		}
-
-		//glClipControl(GL_UPPER_LEFT, GL_NEGATIVE_ONE_TO_ONE);
-		m_ActiveScene.Load(m_AssetManager);
+		m_Window.InitializeGL();
+		m_Window.SetCallbacks();
+		m_ActiveScene.Load(m_Window, m_AssetManager);
 		return true;
 	}
 	return false;
 }
 
+bool Application::CreateWindow(int width, int height, const char* title)
+{
+	GLFWwindow* glfwWindow = glfwCreateWindow(width, height, title, nullptr, nullptr);
+	if (!glfwWindow)
+	{
+		spdlog::critical("Failed to create GLFW window!");
+		return false;
+	}
+
+	GLFWcursor* cursor = glfwCreateStandardCursor(GLFW_CROSSHAIR_CURSOR);
+
+	if (!cursor) spdlog::error("Failed to create cursor, using default system cursor.");
+	else glfwSetCursor(glfwWindow, cursor);
+
+	m_Window.Create(glfwWindow, width, height, title);
+	return true;
+}
+
+
 
 void Application::Run()
 {
-	glEnable(GL_DEPTH_TEST);
-	glEnable(GL_STENCIL_TEST);
-	glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
-	while (m_Window->IsOpen())
+	while (m_Window.IsOpen())
 	{
 		Time::Update();
 		glfwPollEvents();
 
 		m_AISystem.Update(m_ActiveScene);
 
-		m_Window->Clear();
+		m_Window.Clear();
 		m_RenderSystem.Draw(m_ActiveScene);
-		m_Window->SwapBuffers();
+		m_Window.SwapBuffers();
 	}
 }
 
@@ -81,6 +89,5 @@ void Application::PrintInfo() const
 void Application::TerminateApplication() const
 {
 	glfwTerminate();
-	exit(EXIT_SUCCESS);
 }
 

@@ -1,4 +1,5 @@
 #pragma once
+#include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <memory>
 #include <glm/vec2.hpp>
@@ -7,14 +8,17 @@
 class Window
 {
 public:
-    static std::unique_ptr<Window> CreateInstance(int width, int height, const char* title);
+    Window() = default;
     ~Window();
+
+    bool Create(GLFWwindow* window, int width, int height, const char* title);
 
     int GetWidth() const { return m_Width; }
     int GetHeight() const { return m_Height; }
     const char* GetTitle() const { return m_Title; }
 
-    void MakeContext(int interval) const;
+    bool MakeContext(int interval) const;
+    void InitializeGL();
     bool IsOpen() const { return !glfwWindowShouldClose(m_Window); }
     void SwapBuffers() const { glfwSwapBuffers(m_Window); }
     void Clear() const;
@@ -23,7 +27,6 @@ public:
     void SetCursorPosition(int x, int y) const { glfwSetCursorPos(m_Window, x, y); }
     void SetCallbacks() const;
 private:
-    Window(GLFWwindow* window, int width, int height, const char* title);
     void OnFrameBufferSizeChanged(const Event& event);
     void OnKeyPressed(const Event& event) const;
     void OnCursorPositionChanged(const Event& event) const;

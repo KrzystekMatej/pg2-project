@@ -22,8 +22,6 @@ public:
         std::string key = Utils::ToLower(name);
         auto it = m_AssetMap.find(key);
         if (it != m_AssetMap.end()) return it->second.get();
-
-        spdlog::warn("Asset '{}' not found in registry.", key);
         return nullptr;
     }
 
@@ -38,11 +36,6 @@ public:
         }
 
         return it->second.get();
-    }
-
-    static std::string GetFileAssetName(const std::string& fileName)
-    {
-        return Utils::ToLower(Utils::RemoveFileExtension(fileName));
     }
 
 protected:

@@ -22,8 +22,12 @@ static void BuildComplexEntity(const std::vector<const MeshHandle*>& meshes, Sce
 
 void Scene::Load(const Project& project, const Window& window, AssetManager& assetManager)
 {
-    const ShaderProgram* program = assetManager.GetRegistry<ShaderRegistry>()->LoadShaderProgram(project.GetShaderDirectory(), "Normal");
-    std::vector<const MeshHandle*> meshes = assetManager.LoadObjFile(project.GetMeshDirectory(), "ship.obj");
+    const ShaderProgram* program = assetManager.GetRegistry<ShaderRegistry>()->LoadShaderProgram
+	(
+        project.GetShaderDirectory() / "Normal",
+        "Normal"
+    );
+    std::vector<const MeshHandle*> meshes = assetManager.LoadObjFile(project.GetMeshDirectory() / "ship.obj");
 
     BuildComplexEntity(meshes, this, program);
 
@@ -39,5 +43,5 @@ void Scene::Load(const Project& project, const Window& window, AssetManager& ass
     m_Registry.emplace<Camera>(m_ActiveCamera, glm::radians(45.f), aspectRatio, 0.01f, 1000.0f);
     m_Registry.emplace<Transform>(m_ActiveCamera, glm::vec3(0, 0, 0), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1));
     Script& script = m_Registry.emplace<Script>(m_ActiveCamera);
-    script.AddBehavior<CameraController>(Entity(m_ActiveCamera, this), 20.f, 0.01f, window);
+    script.AddBehavior<CameraController>(Entity(m_ActiveCamera, this), 5.f, 0.01f, window);
 }

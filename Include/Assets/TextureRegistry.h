@@ -8,6 +8,6 @@ class TextureRegistry : public AssetRegistry<Texture>
 public:
     using BaseRegistryType = AssetRegistry;
 
-    const Texture* LoadTexture(const std::filesystem::path& directoryPath, const std::string& fileName, TextureType type = TextureType::Generic);
+    const Texture* LoadTexture(const std::filesystem::path& filePath, const std::string& textureName, TextureType type = TextureType::Generic);
     const Texture* LoadMipChain(const std::filesystem::path& directoryPath, const std::string& textureName, TextureFormat format, TextureType type);
 };

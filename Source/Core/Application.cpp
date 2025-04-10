@@ -29,7 +29,7 @@ Application::~Application()
 
 bool Application::Init()
 {
-	if (CreateWindow(1280, 720, "PG-2") && m_Window.MakeContext(1))
+	if (CreateWindow(1920, 1080, "PG-2") && m_Window.MakeContext(1))
 	{
 		m_Window.InitializeGL();
 		m_Window.SetCallbacks();

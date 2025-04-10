@@ -2,6 +2,7 @@
 #include "Systems/RenderSystem.h"
 #include "Window.h"
 #include "Assets/AssetManager.h"
+#include "Assets/MaterialRegistry.h"
 #include "Scene/Scene.h"
 #include "Systems/AISystem.h"
 #include "Assets/ShaderRegistry.h"
@@ -16,6 +17,8 @@ public:
 	{
 		m_AssetManager.AddRegistry<ShaderRegistry>();
 		m_AssetManager.AddRegistry<MeshRegistry>();
+		m_AssetManager.AddRegistry<MaterialRegistry>();
+		m_AssetManager.AddRegistry<TextureRegistry>();
 	}
 	~Application();
 

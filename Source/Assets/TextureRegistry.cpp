@@ -4,12 +4,11 @@
 #include <FreeImage.h>
 
 
-const Texture* TextureRegistry::LoadTexture(const std::filesystem::path& directoryPath, const std::string& fileName, TextureType type)
+const Texture* TextureRegistry::LoadTexture(const std::filesystem::path& filePath, const std::string& textureName, TextureType type)
 {
-	std::string textureName = GetFileAssetName(fileName);
 	if (const Texture* cached = GetAsset(textureName)) return cached;
 
-	const char* fullPath = (directoryPath / fileName).string().c_str();
+	const char* fullPath = filePath.string().c_str();
 
 	FREE_IMAGE_FORMAT format = FreeImage_GetFileType(fullPath, 0);
 	if (format == FIF_UNKNOWN) format = FreeImage_GetFIFFromFilename(fullPath);
@@ -48,13 +47,11 @@ const Texture* TextureRegistry::LoadMipChain(const std::filesystem::path& direct
 {
 	if (const Texture* cached = GetAsset(textureName)) return cached;
 
-	std::filesystem::path mipDirectory = directoryPath / textureName;
-
-	if (!exists(mipDirectory) || !is_directory(mipDirectory)) return nullptr;
+	if (!exists(directoryPath) || !is_directory(directoryPath)) return nullptr;
 
 	std::vector<std::filesystem::path> mipPaths;
 
-	for (const auto& entry : std::filesystem::directory_iterator(mipDirectory))
+	for (const auto& entry : std::filesystem::directory_iterator(directoryPath))
 	{
 		if (entry.is_regular_file()) mipPaths.push_back(entry.path());
 	}

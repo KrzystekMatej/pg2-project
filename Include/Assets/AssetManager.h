@@ -34,7 +34,13 @@ public:
         return static_cast<TDerived*>(it->second.get());
     }
 
-	std::vector<const MeshHandle*> LoadObjFile(const std::filesystem::path& directoryPath, const std::string& fileName);
+	std::vector<const MeshHandle*> LoadObjFile(const std::filesystem::path& filePath);
+
+    template<typename T>
+    static std::string GetDefaultAssetName(const std::filesystem::path& assetPath, const std::string& suffix)
+    {
+        return std::format("{}_{}_{}", assetPath.stem().string(), typeid(T).name(), suffix);
+    }
 private:
     std::unordered_map<std::type_index, std::unique_ptr<AssetRegistryBase>> m_RegistryMap;
 };

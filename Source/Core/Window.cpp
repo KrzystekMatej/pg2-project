@@ -1,6 +1,5 @@
 #include "Core/Window.h"
 
-#include <iostream>
 #include <spdlog/spdlog.h>
 
 #include "EventSystem/GLFWCallbacks.h"

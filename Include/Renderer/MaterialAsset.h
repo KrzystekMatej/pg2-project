@@ -23,12 +23,12 @@ struct MaterialAsset
 	glm::vec3 Emission = { 0.0f, 0.0f, 0.0f };
 	glm::vec3 Attenuation = { 0.0f, 0.0f, 0.0f };
 
-	void SetTexture(Map type, std::shared_ptr<Texture> texture)
+	void SetTexture(Map type, const Texture* texture)
 	{
 		m_Textures[static_cast<size_t>(type)] = std::move(texture);
 	}
 
-	std::shared_ptr<Texture> GetTexture(Map type) const
+	const Texture* GetTexture(Map type) const
 	{
 		return m_Textures[static_cast<size_t>(type)];
 	}
@@ -52,6 +52,6 @@ struct MaterialAsset
 	}
 
 private:
-	std::array<std::shared_ptr<Texture>, static_cast<size_t>(Map::kMapsCount)> m_Textures{ nullptr };
+	std::array<const Texture*, static_cast<size_t>(Map::kMapsCount)> m_Textures{ nullptr };
 	std::array<glm::vec3, static_cast<size_t>(Map::kMapsCount)> m_fallbackValues{};
 };

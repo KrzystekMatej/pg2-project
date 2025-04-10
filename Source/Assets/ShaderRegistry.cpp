@@ -3,7 +3,11 @@
 #include <spdlog/spdlog.h>
 #include <filesystem>
 
-const ShaderProgram* ShaderRegistry::LoadShaderProgram(const std::filesystem::path& directoryPath, const std::string& shaderName)
+const ShaderProgram* ShaderRegistry::LoadShaderProgram
+(
+    const std::filesystem::path& directoryPath,
+    const std::string& shaderName
+)
 {
     if (const ShaderProgram* cached = GetAsset(shaderName)) return cached;
 
@@ -17,11 +21,10 @@ const ShaderProgram* ShaderRegistry::LoadShaderProgram(const std::filesystem::pa
     };
 
     std::vector<Shader> shaders;
-    std::filesystem::path shaderProgramPath = directoryPath / shaderName;
 
     for (const auto& [fileName, shaderType] : shaderTypes)
     {
-        std::filesystem::path fullPath = shaderProgramPath / fileName;
+        std::filesystem::path fullPath = directoryPath / fileName;
 
         if (!exists(fullPath))
         {

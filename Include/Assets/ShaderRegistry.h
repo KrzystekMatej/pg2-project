@@ -9,5 +9,9 @@ class ShaderRegistry : public AssetRegistry<ShaderProgram>
 public:
 	using BaseRegistryType = AssetRegistry;
 
-	const ShaderProgram* LoadShaderProgram(const std::filesystem::path& directoryPath, const std::string& shaderName);
+	const ShaderProgram* LoadShaderProgram
+	(
+		const std::filesystem::path& directoryPath,
+		const std::string& shaderName
+	);
 };

@@ -42,12 +42,12 @@ public:
     }
 
     template<typename TBehavior, typename... Args>
-    TBehavior* AddBehavior(entt::entity entity, entt::registry& registry, Args&&... args)
+    TBehavior* AddBehavior(Entity entity, Args&&... args)
     {
         static_assert(std::is_base_of_v<Behavior, TBehavior>, "TBehavior must inherit from Behavior");
 
-        auto* behavior = new TBehavior(std::forward<Args>(args)...);
-        behavior->Awake(entity, registry);
+        auto* behavior = new TBehavior(entity, std::forward<Args>(args)...);
+        behavior->Awake();
         m_Behaviors.push_back(behavior);
         return behavior;
     }

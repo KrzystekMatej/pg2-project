@@ -3,36 +3,40 @@
 
 VertexBuffer::VertexBuffer(const void* data, size_t size)
 {
-	glGenBuffers(1, &m_VBO);
-	glBindBuffer(GL_ARRAY_BUFFER, m_VBO);
+	glGenBuffers(1, &m_Id);
+	glBindBuffer(GL_ARRAY_BUFFER, m_Id);
 	glBufferData(GL_ARRAY_BUFFER, size, data, GL_STATIC_DRAW);
 }
 
 VertexBuffer::VertexBuffer(VertexBuffer&& other) noexcept
-    : m_VBO(other.m_VBO)
+    : m_Id(other.m_Id)
 {
-    other.m_VBO = 0;
+    other.m_Id = 0;
 }
 
 VertexBuffer& VertexBuffer::operator=(VertexBuffer&& other) noexcept
 {
     if (this != &other)
     {
-        glDeleteBuffers(1, &m_VBO);
-        m_VBO = other.m_VBO;
-        other.m_VBO = 0;
+        glDeleteBuffers(1, &m_Id);
+        m_Id = other.m_Id;
+        other.m_Id = 0;
     }
     return *this;
 }
 
 VertexBuffer::~VertexBuffer()
 {
-	glDeleteBuffers(1, &m_VBO);
+	if (m_Id)
+	{
+		glDeleteBuffers(1, &m_Id);
+		m_Id = 0;
+	}
 }
 
 void VertexBuffer::Bind() const
 {
-	glBindBuffer(GL_ARRAY_BUFFER, m_VBO);
+	glBindBuffer(GL_ARRAY_BUFFER, m_Id);
 }
 
 void VertexBuffer::Unbind() const

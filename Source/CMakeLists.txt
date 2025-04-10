@@ -15,6 +15,7 @@ find_package(glm CONFIG REQUIRED)
 find_package(assimp CONFIG REQUIRED)
 find_package(spdlog CONFIG REQUIRED)
 find_package(EnTT CONFIG REQUIRED)
+find_package(yaml-cpp CONFIG REQUIRED)
 
 if (WIN32)
     set(OIDN_LIB_NAME "${CMAKE_SOURCE_DIR}/External/oidn/lib/OpenImageDenoise.lib")
@@ -34,6 +35,7 @@ target_link_libraries(RayTracer PRIVATE
     ${OIDN_LIB_NAME}
     spdlog::spdlog
     EnTT::EnTT
+    yaml-cpp::yaml-cpp
 )
 
 if (WIN32)

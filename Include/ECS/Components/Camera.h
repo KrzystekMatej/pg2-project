@@ -2,9 +2,9 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
-struct CameraData
+struct Camera
 {
-    CameraData(float fovY, float aspectRatio, float nearPlane, float farPlane)
+    Camera(float fovY, float aspectRatio, float nearPlane, float farPlane)
 		: FovY(fovY), AspectRatio(aspectRatio), NearPlane(nearPlane), FarPlane(farPlane) {}
 
     glm::mat4 GetProjectionMatrix() const

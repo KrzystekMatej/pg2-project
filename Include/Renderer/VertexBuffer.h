@@ -4,7 +4,7 @@
 class VertexBuffer
 {
 public:
-    VertexBuffer() : m_VBO(0) {}
+    VertexBuffer() : m_Id(0) {}
     VertexBuffer(const void* data, size_t size);
 
     VertexBuffer(const VertexBuffer&) = delete;
@@ -19,5 +19,5 @@ public:
     void Unbind() const;
 
 private:
-    uint32_t m_VBO;
+    uint32_t m_Id;
 };

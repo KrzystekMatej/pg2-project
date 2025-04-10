@@ -3,6 +3,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/quaternion.hpp>
+#include "ECS/Entity.h"
 
 struct Transform
 {
@@ -12,12 +13,30 @@ struct Transform
     glm::vec3 Rotation{ 0.0f, 0.0f, 0.0f };
     glm::vec3 Scale{ 1.0f, 1.0f, 1.0f };
 
-    Transform() = default;
-    Transform(const glm::vec3& position, const glm::vec3& rotation, const glm::vec3& scale)
-        : Position(position), Rotation(rotation), Scale(scale) {}
+    Entity Parent;
 
+    Transform() = default;
+    Transform(const glm::vec3& position, const glm::vec3& rotation, const glm::vec3& scale, Entity parent = Entity())
+        : Position(position), Rotation(rotation), Scale(scale), Parent(parent) {}
+
+    Transform(Entity parent) : Parent(parent) {}
 
 	glm::mat4 GetLocalToWorldMatrix() const
+    {
+        glm::mat4 result = GetLocalToParentMatrix();
+
+        Entity current = Parent;
+        while (current)
+        {
+            const Transform& parentTransform = current.GetComponent<Transform>();
+            result = parentTransform.GetLocalToParentMatrix() * result;
+            current = parentTransform.Parent;
+        }
+
+        return result;
+    }
+
+    glm::mat4 GetLocalToParentMatrix() const
     {
         glm::vec3 forward = GetForwardVector();
         glm::vec3 right = glm::normalize(glm::cross(forward, WorldUp));
@@ -36,6 +55,21 @@ struct Transform
 
     glm::mat3 GetNormalMatrix() const
     {
+        glm::mat3 result = GetParentNormalMatrix();
+
+        Entity current = Parent;
+        while (current)
+        {
+            const Transform& parentTransform = current.GetComponent<Transform>();
+            result = parentTransform.GetParentNormalMatrix() * result;
+            current = parentTransform.Parent;
+        }
+
+        return result;
+    }
+
+    glm::mat3 GetParentNormalMatrix() const
+    {
         glm::vec3 forward = GetForwardVector();
         glm::vec3 right = glm::normalize(glm::cross(forward, WorldUp));
         glm::vec3 up = glm::normalize(glm::cross(right, forward));
@@ -52,6 +86,21 @@ struct Transform
 
     glm::mat4 GetWorldToLocalMatrix() const
     {
+        glm::mat4 result = GetParentToLocalMatrix();
+
+        Entity current = Parent;
+        while (current)
+        {
+            const Transform& parentTransform = current.GetComponent<Transform>();
+            result = result * parentTransform.GetParentToLocalMatrix();
+            current = parentTransform.Parent;
+        }
+
+        return result;
+    }
+
+    glm::mat4 GetParentToLocalMatrix() const
+    {
         glm::vec3 inverseScale = 1.0f / Scale;
 
         glm::vec3 forward = GetForwardVector();
@@ -63,7 +112,7 @@ struct Transform
         glm::vec3 t =
         {
             glm::dot(right, -Position),
-        	glm::dot(up, -Position),
+            glm::dot(up, -Position),
             glm::dot(look, -Position)
         };
 
@@ -74,10 +123,25 @@ struct Transform
             look.x * inverseScale.z,   look.y * inverseScale.z,   look.z * inverseScale.z,   0.0f,
             t.x,                       t.y,                       t.z,                       1.0f
         };
-
     }
 
     glm::mat4 GetViewMatrix() const
+    {
+        glm::mat4 result = GetParentViewMatrix();
+
+        Entity current = Parent;
+        while (current)
+        {
+            const Transform& parentTransform = current.GetComponent<Transform>();
+            result = result * parentTransform.GetParentViewMatrix();
+            current = parentTransform.Parent;
+        }
+
+        return result;
+    }
+
+
+    glm::mat4 GetParentViewMatrix() const
     {
         glm::vec3 forward = GetForwardVector();
         glm::vec3 right = normalize(glm::cross(forward, WorldUp));
@@ -93,7 +157,7 @@ struct Transform
         };
 
         return glm::mat4
-    	{
+        {
             right.x, up.x, look.x, 0.0f,
             right.y, up.y, look.y, 0.0f,
             right.z, up.z, look.z, 0.0f,

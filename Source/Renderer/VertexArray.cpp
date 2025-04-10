@@ -2,31 +2,35 @@
 
 VertexArray::VertexArray()
 {
-	glGenVertexArrays(1, &m_VAO);
+	glGenVertexArrays(1, &m_Id);
 	Bind();
 }
 
 VertexArray::VertexArray(VertexArray&& other) noexcept
-	: m_VAO(other.m_VAO), m_VertexBuffers(std::move(other.m_VertexBuffers))
+	: m_Id(other.m_Id), m_VertexBuffers(std::move(other.m_VertexBuffers))
 {
-	other.m_VAO = 0;
+	other.m_Id = 0;
 }
 
 VertexArray& VertexArray::operator=(VertexArray&& other) noexcept
 {
 	if (this != &other)
 	{
-		glDeleteVertexArrays(1, &m_VAO);
-		m_VAO = other.m_VAO;
+		glDeleteVertexArrays(1, &m_Id);
+		m_Id = other.m_Id;
 		m_VertexBuffers = std::move(other.m_VertexBuffers);
-		other.m_VAO = 0;
+		other.m_Id = 0;
 	}
 	return *this;
 }
 
 VertexArray::~VertexArray()
 {
-	glDeleteVertexArrays(1, &m_VAO);
+	if (m_Id)
+	{
+		glDeleteVertexArrays(1, &m_Id);
+		m_Id = 0;
+	}
 }
 
 void VertexArray::AddBuffer(VertexBuffer&& vertexBuffer, const VertexBufferLayout& layout)
@@ -47,7 +51,7 @@ void VertexArray::AddBuffer(VertexBuffer&& vertexBuffer, const VertexBufferLayou
 
 void VertexArray::Bind() const
 {
-	glBindVertexArray(m_VAO);
+	glBindVertexArray(m_Id);
 }
 
 void VertexArray::Unbind() const

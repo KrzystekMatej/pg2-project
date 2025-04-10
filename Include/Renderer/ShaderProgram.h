@@ -39,6 +39,6 @@ private:
 	bool CheckLinking() const;
 	void Validate() const;
 
-	uint32_t m_ProgramID;
+	uint32_t m_Id;
 	mutable std::unordered_map<std::string, int> m_UniformLocationCache;
 };

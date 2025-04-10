@@ -8,7 +8,7 @@
 
 int main()
 {
-	Application* app = Application::CreateInstance();
+	Application* app = Application::CreateInstance("../../config.yaml");
 
 	assert(app && "Application is null!");
 

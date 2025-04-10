@@ -1,0 +1,7 @@
+Name: PG-2
+
+AssetDirectory: Assets
+ShaderDirectory: Shaders
+MeshDirectory: Meshes
+TextureDirectory: Textures
+SceneDirectory: Scenes

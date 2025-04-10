@@ -10,7 +10,7 @@ void AISystem::Update(Scene& scene) const
     {
         for (Behavior* behavior : script.GetBehaviors())
         {
-            behavior->Update(entity, registry);
+            behavior->Update();
         }
     }
 }

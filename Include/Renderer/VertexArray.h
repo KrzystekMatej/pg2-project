@@ -19,6 +19,6 @@ public:
     void Bind() const;
     void Unbind() const;
 private:
-    uint32_t m_VAO;
+    uint32_t m_Id;
     std::vector<VertexBuffer> m_VertexBuffers;
 };

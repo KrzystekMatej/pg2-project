@@ -2,18 +2,18 @@
 #include "Renderer/VertexArray.h"
 #include "Renderer/IndexBuffer.h"
 
-class Mesh
+class MeshHandle
 {
 public:
-    Mesh(VertexArray&& vertexArray, IndexBuffer&& indexBuffer)
+    MeshHandle(VertexArray&& vertexArray, IndexBuffer&& indexBuffer)
         : m_VertexArray(std::move(vertexArray)), m_IndexBuffer(std::move(indexBuffer)) {
     }
 
-    Mesh(const Mesh&) = delete;
-    Mesh& operator=(const Mesh&) = delete;
+    MeshHandle(const MeshHandle&) = delete;
+    MeshHandle& operator=(const MeshHandle&) = delete;
 
-    Mesh(Mesh&&) noexcept = default;
-    Mesh& operator=(Mesh&&) noexcept = default;
+    MeshHandle(MeshHandle&&) noexcept = default;
+    MeshHandle& operator=(MeshHandle&&) noexcept = default;
 
     const VertexArray& GetVertexArray() const { return m_VertexArray; }
     const IndexBuffer& GetIndexBuffer() const { return m_IndexBuffer; }

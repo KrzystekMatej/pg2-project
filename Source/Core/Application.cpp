@@ -6,7 +6,7 @@
 
 #include "Core/Time.h"
 
-Application* Application::CreateInstance()
+Application* Application::CreateInstance(const std::filesystem::path& projectConfigPath)
 {
 	if (!glfwInit())
 	{
@@ -19,7 +19,7 @@ Application* Application::CreateInstance()
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 	glfwWindowHint(GLFW_SAMPLES, 8);
 
-	return new Application();
+	return new Application(projectConfigPath);
 }
 
 Application::~Application()
@@ -33,7 +33,7 @@ bool Application::Init()
 	{
 		m_Window.InitializeGL();
 		m_Window.SetCallbacks();
-		m_ActiveScene.Load(m_Window, m_AssetManager);
+		m_ActiveScene.Load(m_Project, m_Window, m_AssetManager);
 		return true;
 	}
 	return false;

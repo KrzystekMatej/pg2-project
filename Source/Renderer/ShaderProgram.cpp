@@ -4,23 +4,23 @@
 
 ShaderProgram::ShaderProgram()
 {
-	m_ProgramID = glCreateProgram();
+	m_Id = glCreateProgram();
 }
 
 ShaderProgram::ShaderProgram(ShaderProgram&& other) noexcept
-	: m_ProgramID(other.m_ProgramID), m_UniformLocationCache(std::move(other.m_UniformLocationCache))
+	: m_Id(other.m_Id), m_UniformLocationCache(std::move(other.m_UniformLocationCache))
 {
-	other.m_ProgramID = 0;
+	other.m_Id = 0;
 }
 
 ShaderProgram& ShaderProgram::operator=(ShaderProgram&& other) noexcept
 {
 	if (this != &other)
 	{
-		glDeleteProgram(m_ProgramID);
-		m_ProgramID = other.m_ProgramID;
+		glDeleteProgram(m_Id);
+		m_Id = other.m_Id;
 		m_UniformLocationCache = std::move(other.m_UniformLocationCache);
-		other.m_ProgramID = 0;
+		other.m_Id = 0;
 	}
 	return *this;
 }
@@ -28,22 +28,26 @@ ShaderProgram& ShaderProgram::operator=(ShaderProgram&& other) noexcept
 
 ShaderProgram::~ShaderProgram()
 {
-	glDeleteProgram(m_ProgramID);
+	if (m_Id)
+	{
+		glDeleteProgram(m_Id);
+		m_Id = 0;
+	}
 }
 
 void ShaderProgram::AttachShader(const Shader& shader) const
 {
-	shader.Attach(m_ProgramID);
+	shader.Attach(m_Id);
 }
 
 void ShaderProgram::DetachShader(const Shader& shader) const
 {
-	shader.Detach(m_ProgramID);
+	shader.Detach(m_Id);
 }
 
 bool ShaderProgram::Link() const
 {
-	glLinkProgram(m_ProgramID);
+	glLinkProgram(m_Id);
 	if (!CheckLinking()) return false;
 
 #ifdef DEBUG
@@ -55,14 +59,14 @@ bool ShaderProgram::Link() const
 
 void ShaderProgram::Validate() const
 {
-	glValidateProgram(m_ProgramID);
+	glValidateProgram(m_Id);
 
 	int success;
-	glGetProgramiv(m_ProgramID, GL_VALIDATE_STATUS, &success);
+	glGetProgramiv(m_Id, GL_VALIDATE_STATUS, &success);
 	if (!success)
 	{
 		std::vector<char> log(1024);
-		glGetProgramInfoLog(m_ProgramID, log.size(), nullptr, log.data());
+		glGetProgramInfoLog(m_Id, log.size(), nullptr, log.data());
 		spdlog::warn("Shader Program Validation Warning:\n{}", log.data());
 	}
 }
@@ -75,7 +79,7 @@ int ShaderProgram::GetUniformLocation(const std::string& name) const
 		return it->second;
 	}
 
-	int location = glGetUniformLocation(m_ProgramID, name.c_str());
+	int location = glGetUniformLocation(m_Id, name.c_str());
 	if (location == -1)
 	{
 		spdlog::error("Uniform '{}' does not exist!", name);
@@ -122,14 +126,14 @@ void ShaderProgram::SetUniform(UniformType uniformType, const std::string& name,
 bool ShaderProgram::CheckLinking() const
 {
 	GLint success;
-	glGetProgramiv(m_ProgramID, GL_LINK_STATUS, &success);
+	glGetProgramiv(m_Id, GL_LINK_STATUS, &success);
 	if (success == GL_FALSE)
 	{
 		GLint logLength;
-		glGetProgramiv(m_ProgramID, GL_INFO_LOG_LENGTH, &logLength);
+		glGetProgramiv(m_Id, GL_INFO_LOG_LENGTH, &logLength);
 
 		std::vector<char> log(logLength);
-		glGetProgramInfoLog(m_ProgramID, logLength, nullptr, log.data());
+		glGetProgramInfoLog(m_Id, logLength, nullptr, log.data());
 
 		spdlog::error("Shader Program Linking Failure:\n{}", log.data());
 		return false;
@@ -139,7 +143,7 @@ bool ShaderProgram::CheckLinking() const
 
 void ShaderProgram::Use() const
 {
-	glUseProgram(m_ProgramID);
+	glUseProgram(m_Id);
 }
 
 void ShaderProgram::Unbind() const

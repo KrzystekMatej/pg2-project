@@ -8,7 +8,7 @@
 class Window
 {
 public:
-    Window() = default;
+    Window() : m_Window(nullptr), m_Width(0), m_Height(0), m_Title("") {}
     ~Window();
 
     bool Create(GLFWwindow* window, int width, int height, const char* title);

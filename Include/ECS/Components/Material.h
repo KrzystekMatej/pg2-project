@@ -1,10 +1,10 @@
 #pragma once
-#include "Renderer/MaterialAsset.h"
+#include "Renderer/ShaderProgram.h"
 
 struct Material
 {
-	Material(const ShaderProgram* shaderProgram) : ShaderProgram(shaderProgram) {}
+	Material(const ShaderProgram* shaderProgram)
+		: ShaderProgram(shaderProgram) {}
 
 	const ShaderProgram* ShaderProgram;
-	const MaterialAsset* MaterialAsset;
 };

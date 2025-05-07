@@ -1,95 +1,96 @@
 #include "Assets/MeshRegistry.h"
-
 #include <numeric>
 #include <spdlog/spdlog.h>
-#include <assimp/Importer.hpp>
-#include <assimp/postprocess.h>
+#include "Assets/AssetManager.h"
 
-const MeshHandle* MeshRegistry::LoadMesh(const aiMesh* mesh, const std::string& meshName)
+const MeshHandle* MeshRegistry::LoadMesh(const std::vector<tinyobj::shape_t>& shapes, const tinyobj::attrib_t& attrib, const std::string& meshName, const MaterialRange* materialRange)
 {
 	if (const MeshHandle* cached = GetAsset(meshName)) return cached;
-
-	if (!mesh->HasFaces())
-	{
-		spdlog::warn("Mesh '{}' has no faces", meshName);
-		return nullptr;
-	}
-
+	std::vector<TriangleWithAdjacency> triangles;
 	VertexBufferLayout layout;
 	TriangleWithAdjacency::AddVertexWithAdjacencyToLayout(layout);
+	triangles.reserve(attrib.vertices.size()/3);
 
-	std::vector<TriangleWithAdjacency> triangles = BuildTriangles(mesh);
-
-	if (triangles.empty())
+	for (size_t shapeIndex = 0; shapeIndex < shapes.size(); shapeIndex++)
 	{
-		spdlog::error("Invalid primitives in mesh - requires triangles - '{}'", meshName);
-		return nullptr;
+		const tinyobj::shape_t& shape = shapes[shapeIndex];
+		const tinyobj::mesh_t& meshSource = shape.mesh;
+		std::string groupName = shape.name.empty() ? AssetManager::GetDefaultAssetName<MeshHandle>(meshName, std::to_string(shapeIndex)) : shape.name;
+
+		if (meshSource.indices.empty() || meshSource.num_face_vertices.empty())
+		{
+			spdlog::warn("Mesh '{}', group '{}' - has no indices or faces", meshName, groupName);
+			continue;
+		}
+
+		BuildTriangles(attrib, meshSource, materialRange, triangles);
 	}
 
-	auto handle = CreateMeshHandle(triangles, layout);
-	return AddAsset(meshName, std::move(handle));
+	return AddAsset(meshName, CreateMeshHandle(triangles, layout));
 }
 
-std::vector<MeshRegistry::TriangleWithAdjacency> MeshRegistry::BuildTriangles(const aiMesh* mesh)
+void MeshRegistry::BuildTriangles
+(
+	const tinyobj::attrib_t& attrib,
+	const tinyobj::mesh_t& meshSource,
+	const MaterialRange* materialRange,
+	std::vector<TriangleWithAdjacency>& triangles
+)
 {
-	std::vector<TriangleWithAdjacency> triangles;
-
-	for (uint32_t i = 0; i < mesh->mNumFaces; ++i)
+	size_t indexOffset = 0;
+	for (std::size_t face = 0; face < meshSource.num_face_vertices.size(); face++)
 	{
-		const aiFace& face = mesh->mFaces[i];
-		if (face.mNumIndices != 3) return {};
+		uint32_t faceVertexCount = meshSource.num_face_vertices[face];
+		if (faceVertexCount != 3) continue;
 
 		TriangleWithAdjacency triangle{};
 
-		for (int v = 0; v < 3; v++)
+		for (std::size_t v = 0; v < 3; v++)
 		{
-			uint32_t index = face.mIndices[v];
-			Vertex& vert = triangle.vertices[v * 2];
+			const tinyobj::index_t& index = meshSource.indices[indexOffset + v];
+			Vertex& vertex = triangle.vertices[v * 2];
 
-			vert.Position[0] = mesh->mVertices[index].x;
-			vert.Position[1] = mesh->mVertices[index].y;
-			vert.Position[2] = mesh->mVertices[index].z;
-
-			if (mesh->HasNormals())
+			if (index.vertex_index >= 0)
 			{
-				vert.Normal[0] = mesh->mNormals[index].x;
-				vert.Normal[1] = mesh->mNormals[index].y;
-				vert.Normal[2] = mesh->mNormals[index].z;
+				vertex.Position[0] = attrib.vertices[3 * index.vertex_index + 0];
+				vertex.Position[1] = attrib.vertices[3 * index.vertex_index + 1];
+				vertex.Position[2] = attrib.vertices[3 * index.vertex_index + 2];
 			}
 
-			if (mesh->HasVertexColors(0))
+			if (index.normal_index >= 0)
 			{
-				vert.Color[0] = mesh->mColors[0][index].r;
-				vert.Color[1] = mesh->mColors[0][index].g;
-				vert.Color[2] = mesh->mColors[0][index].b;
+				vertex.Normal[0] = attrib.normals[3 * index.normal_index + 0];
+				vertex.Normal[1] = attrib.normals[3 * index.normal_index + 1];
+				vertex.Normal[2] = attrib.normals[3 * index.normal_index + 2];
+			}
+
+			if (!attrib.colors.empty() && index.vertex_index >= 0)
+			{
+				vertex.Color[0] = attrib.colors[3 * index.vertex_index + 0];
+				vertex.Color[1] = attrib.colors[3 * index.vertex_index + 1];
+				vertex.Color[2] = attrib.colors[3 * index.vertex_index + 2];
 			}
 			else
 			{
-				vert.Color[0] = 1.0f;
-				vert.Color[1] = 1.0f;
-				vert.Color[2] = 1.0f;
+				vertex.Color[0] = 1.0f;
+				vertex.Color[1] = 1.0f;
+				vertex.Color[2] = 1.0f;
 			}
 
-			if (mesh->HasTextureCoords(0))
+			if (index.texcoord_index >= 0)
 			{
-				vert.TextureCoordinates[0] = mesh->mTextureCoords[0][index].x;
-				vert.TextureCoordinates[1] = mesh->mTextureCoords[0][index].y;
+				vertex.TextureCoordinates[0] = attrib.texcoords[2 * index.texcoord_index + 0];
+				vertex.TextureCoordinates[1] = attrib.texcoords[2 * index.texcoord_index + 1];
 			}
 
-			if (mesh->HasTangentsAndBitangents())
-			{
-				vert.Tangent[0] = mesh->mTangents[index].x;
-				vert.Tangent[1] = mesh->mTangents[index].y;
-				vert.Tangent[2] = mesh->mTangents[index].z;
-			}
+			vertex.MaterialIndex = materialRange->Offset + meshSource.material_ids[face];
 
 			triangle.vertices[v * 2 + 1] = Vertex{};
 		}
 
 		triangles.push_back(triangle);
+		indexOffset += faceVertexCount;
 	}
-
-	return triangles;
 }
 
 std::unique_ptr<MeshHandle> MeshRegistry::CreateMeshHandle(const std::vector<TriangleWithAdjacency>& triangles, const VertexBufferLayout& layout)

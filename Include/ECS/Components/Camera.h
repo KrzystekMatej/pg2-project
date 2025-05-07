@@ -4,10 +4,10 @@
 
 struct Camera
 {
-    Camera(float fovY, float aspectRatio, float nearPlane, float farPlane)
-		: FovY(fovY), AspectRatio(aspectRatio), NearPlane(nearPlane), FarPlane(farPlane) {}
+    Camera(float fovY, float nearPlane, float farPlane)
+		: FovY(fovY), NearPlane(nearPlane), FarPlane(farPlane) {}
 
-    glm::mat4 GetProjectionMatrix() const
+    glm::mat4 GetProjectionMatrix(float aspectRatio) const
     {
         float f = 1.0f / std::tan(FovY / 2.0f);
         float a = (NearPlane + FarPlane) / (NearPlane - FarPlane);
@@ -17,7 +17,7 @@ struct Camera
 
         return glm::mat4
     	{
-            f / AspectRatio,    0.0f,       0.0f,   0.0f,
+            f / aspectRatio,    0.0f,       0.0f,   0.0f,
             0.0f,               sign * f,   0.0f,   0.0f,
             0.0f,               0.0f,       a,      -1.0f,
             0.0f,               0.0f,       b,      0.0f
@@ -25,7 +25,6 @@ struct Camera
     }
 
     float FovY;
-    float AspectRatio;
     float NearPlane;
     float FarPlane;
 };

@@ -21,7 +21,7 @@ public:
 
     std::filesystem::path GetAssetDirectory() const
     {
-        return m_RootDirectory / m_Config.assetDirectory;
+        return m_RootDirectory / m_Config.AssetDirectory;
     }
 
     std::filesystem::path GetSceneDirectory() const
@@ -37,11 +37,6 @@ public:
     std::filesystem::path GetMeshDirectory() const
     {
         return GetAssetDirectory() / m_Config.meshDirectory;
-    }
-
-    std::filesystem::path GetTextureDirectory() const
-    {
-        return GetAssetDirectory() / m_Config.textureDirectory;
     }
 
     const ProjectConfig& GetConfig() const { return m_Config; }

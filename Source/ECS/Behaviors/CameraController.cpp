@@ -3,7 +3,6 @@
 #include "EventSystem/Events/KeyEvent.h"
 #include "EventSystem/Events/CursorPositionEvent.h"
 #include "Core/Time.h"
-#include "EventSystem/Events/FrameBufferSizeEvent.h"
 #include <GLFW/glfw3.h>
 
 
@@ -11,7 +10,6 @@ void CameraController::Awake()
 {
 	EventDispatcher::AddListener(Event::Type::Key, [this](const Event& event) { OnKeyPressed(event); });
 	EventDispatcher::AddListener(Event::Type::CursorPosition, [this](const Event& event) { OnCursorPositionChanged(event); });
-	EventDispatcher::AddListener(Event::Type::FrameBufferSize, [this](const Event& event) { OnFrameBufferSizeChanged(event); });
 }
 
 void CameraController::Update()
@@ -64,7 +62,7 @@ void CameraController::OnCursorPositionChanged(const Event& event)
 	const auto& cursorEvent = static_cast<const CursorPositionEvent&>(event);
 	glm::vec2 current = cursorEvent.GetPosition();
 
-	glm::vec2 center = glm::vec2(static_cast<float>(m_Window.GetWidth()) / 2.0f, static_cast<float>(m_Window.GetHeight()) / 2.0f);
+	glm::vec2 center = glm::vec2(static_cast<float>(m_Window->GetWidth()) / 2.0f, static_cast<float>(m_Window->GetHeight()) / 2.0f);
 
 	static bool init = false;
 	if (!init)
@@ -80,12 +78,4 @@ void CameraController::OnCursorPositionChanged(const Event& event)
 	transform.Rotation.y += delta.x;
 	transform.Rotation.x -= delta.y;
 	transform.Rotation.x = glm::clamp(transform.Rotation.x, -(glm::half_pi<float>() - 0.1f), glm::half_pi<float>() - 0.1f);
-}
-
-void CameraController::OnFrameBufferSizeChanged(const Event& event)
-{
-	Camera& camera = m_Entity.GetComponent<Camera>();
-
-	const auto& frameBufferEvent = static_cast<const FrameBufferSizeEvent&>(event);
-	camera.AspectRatio = static_cast<float>(frameBufferEvent.GetWidth()) / static_cast<float>(frameBufferEvent.GetHeight());
 }

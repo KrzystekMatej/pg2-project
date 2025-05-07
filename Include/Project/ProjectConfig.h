@@ -6,13 +6,12 @@
 
 struct ProjectConfig
 {
-    std::string name = "Untitled";
+    std::string Name = "Untitled";
 
-    std::filesystem::path assetDirectory = "Assets";
+    std::filesystem::path AssetDirectory = "Assets";
     std::filesystem::path sceneDirectory = "Scenes";
     std::filesystem::path shaderDirectory = "Shaders";
     std::filesystem::path meshDirectory = "Meshes";
-    std::filesystem::path textureDirectory = "Textures";
 
     static ProjectConfig LoadFromYAML(const std::filesystem::path& configPath)
     {
@@ -20,10 +19,10 @@ struct ProjectConfig
 
         ProjectConfig result;
         if (config["Name"])
-            result.name = config["Name"].as<std::string>();
+            result.Name = config["Name"].as<std::string>();
 
         if (config["AssetDirectory"])
-            result.assetDirectory = config["AssetDirectory"].as<std::string>();
+            result.AssetDirectory = config["AssetDirectory"].as<std::string>();
 
         if (config["SceneDirectory"])
             result.sceneDirectory = config["SceneDirectory"].as<std::string>();
@@ -33,9 +32,6 @@ struct ProjectConfig
 
         if (config["MeshDirectory"])
             result.meshDirectory = config["MeshDirectory"].as<std::string>();
-
-        if (config["TextureDirectory"])
-            result.textureDirectory = config["TextureDirectory"].as<std::string>();
 
         return result;
     }

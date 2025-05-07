@@ -6,11 +6,14 @@
 #include <filesystem>
 #include "AssetRegistry.h"
 #include "Renderer/MeshHandle.h"
-#include "Renderer/ShaderProgram.h"
+#include "Renderer/MaterialAsset.h"
+#include "Renderer/ShaderStorageBuffer.h"
 
 class AssetManager
 {
 public:
+    void Initialize();
+
     template<typename TDerived, typename... Args>
     void AddRegistry(Args&&... args)
     {
@@ -23,7 +26,7 @@ public:
     }
 
     template<typename TDerived>
-    TDerived* GetRegistry()
+    TDerived* GetRegistry() const
     {
         using Base = typename TDerived::BaseRegistryType;
         using AssetType = typename Base::AssetType;
@@ -34,12 +37,18 @@ public:
         return static_cast<TDerived*>(it->second.get());
     }
 
-	std::vector<const MeshHandle*> LoadObjFile(const std::filesystem::path& filePath);
+	const MeshHandle* LoadObjFile(const std::filesystem::path& filePath) const;
+
+    template<typename T>
+    static std::string GetDefaultAssetName(const std::string& assetName, const std::string& suffix)
+    {
+        return std::format("{}_{}_{}", assetName, typeid(T).name(), suffix);
+    }
 
     template<typename T>
     static std::string GetDefaultAssetName(const std::filesystem::path& assetPath, const std::string& suffix)
     {
-        return std::format("{}_{}_{}", assetPath.stem().string(), typeid(T).name(), suffix);
+        return GetDefaultAssetName<T>(assetPath.stem().string(), suffix);
     }
 private:
     std::unordered_map<std::type_index, std::unique_ptr<AssetRegistryBase>> m_RegistryMap;

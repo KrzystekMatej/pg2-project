@@ -1,16 +1,23 @@
 #include "Systems/RenderSystem.h"
 
+#include "Assets/MaterialRegistry.h"
 #include "ECS/Components/Mesh.h"
 #include "ECS/Components/Material.h"
 #include "ECS/Components/Transform.h"
 #include "ECS/Components/Camera.h"
 
-void RenderSystem::Draw(Scene& scene) const
+void RenderSystem::Initialize(const AssetManager& assetManager) const
+{
+    const ShaderStorageBuffer* materialBuffer = assetManager.GetRegistry<MaterialRegistry>()->GetMaterialBuffer();
+    materialBuffer->BindBase();
+}
+
+void RenderSystem::Draw(Scene& scene, float aspectRatio) const
 {
     entt::registry& registry = scene.GetRegistry();
     auto group = registry.group<Transform, Material, Mesh>();
-    auto [cameraTransform, camera] = registry.get<Transform, Camera>(scene.GetActiveCamera());
-    glm::mat4 projection = camera.GetProjectionMatrix();
+    auto [cameraTransform, camera] = registry.get<Transform, Camera>(scene.GetActiveCameraHandle());
+    glm::mat4 projection = camera.GetProjectionMatrix(aspectRatio);
     glm::mat4 view = cameraTransform.GetViewMatrix();
 
     for (auto&& [entity, transform, material, geometry] : group.each())

@@ -2,6 +2,7 @@ Build/
 .vs/
 External/oidn/
 External/*.zip
+Assets/Meshes/
 
 CMakeCache.txt
 CMakeFiles/

@@ -2,22 +2,28 @@
 #include <string>
 #include <array>
 #include <glm/glm.hpp>
-#include "ShaderProgram.h"
 #include "Texture.h"
 
-enum class Map : char { kDiffuse = 0, kSpecular, kGlossiness, kBase, kRoughness, kMetallic, kRMA, kNormal, kOpacity, kEmission, kMapsCount };
+enum class Map : uint8_t { Diffuse, Specular, Glossiness, Base, Roughness, Metallic, RMA, Bump, Opacity, Emission, MapCount };
 #define IOR_AIR 1.000293f
+#define IOR_WATER 1.33f
+#define IOR_GLASS 1.5f
+
+#pragma pack(push, 1)
+struct GLMaterial
+{
+	uint64_t textureHandles[static_cast<size_t>(Map::MapCount)];
+};
+#pragma pack(pop)
 
 struct MaterialAsset
 {
 	std::string Name;
 
-	const ShaderProgram* ShaderProgram = nullptr;
-
 	float Shininess = 32.0f;
 	float Roughness = 1.0f;
 	float Metallic = 0.0f;
-	float Reflectivity = 0.0f;
+	float Reflectivity = 0.04f;
 	float Ior = IOR_AIR;
 
 	glm::vec3 Emission = { 0.0f, 0.0f, 0.0f };
@@ -25,7 +31,7 @@ struct MaterialAsset
 
 	void SetTexture(Map type, const Texture* texture)
 	{
-		m_Textures[static_cast<size_t>(type)] = std::move(texture);
+		m_Textures[static_cast<size_t>(type)] = texture;
 	}
 
 	const Texture* GetTexture(Map type) const
@@ -43,15 +49,32 @@ struct MaterialAsset
 		return m_fallbackValues[static_cast<size_t>(type)];
 	}
 
-	void BindTextures() const
+	GLMaterial ToGLMaterial() const
 	{
-		for (size_t i = 0; i < m_Textures.size(); ++i)
+		GLMaterial glMat{};
+
+		for (size_t i = 0; i < static_cast<size_t>(Map::MapCount); ++i)
 		{
-			if (m_Textures[i]) m_Textures[i]->Bind(GL_TEXTURE0 + static_cast<uint32_t>(i));
+			glMat.textureHandles[i] = GetTexture(static_cast<Map>(i))->GetBindlessHandle();
 		}
+
+		return glMat;
 	}
 
 private:
-	std::array<const Texture*, static_cast<size_t>(Map::kMapsCount)> m_Textures{ nullptr };
-	std::array<glm::vec3, static_cast<size_t>(Map::kMapsCount)> m_fallbackValues{};
+	std::array<const Texture*, static_cast<size_t>(Map::MapCount)> m_Textures{ nullptr };
+
+	std::array<glm::vec3, static_cast<size_t>(Map::MapCount)> m_fallbackValues
+	{
+		glm::vec3(1.0f),
+		glm::vec3(1.0f),
+		glm::vec3(1.0f),
+		glm::vec3(1.0f),
+		glm::vec3(1.0f),
+		glm::vec3(0.0f),
+		glm::vec3(1.0f),
+		glm::vec3(0.0f),
+		glm::vec3(1.0f),
+		glm::vec3(0.0f)
+	};
 };

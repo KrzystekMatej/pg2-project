@@ -6,8 +6,7 @@ class MeshHandle
 {
 public:
     MeshHandle(VertexArray&& vertexArray, IndexBuffer&& indexBuffer)
-        : m_VertexArray(std::move(vertexArray)), m_IndexBuffer(std::move(indexBuffer)) {
-    }
+        : m_VertexArray(std::move(vertexArray)), m_IndexBuffer(std::move(indexBuffer)) {}
 
     MeshHandle(const MeshHandle&) = delete;
     MeshHandle& operator=(const MeshHandle&) = delete;

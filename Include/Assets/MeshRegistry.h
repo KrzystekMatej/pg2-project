@@ -1,14 +1,16 @@
 #pragma once
 #include <string>
-#include <assimp/scene.h>
 #include <array>
+#include <tiny_obj_loader.h>
 #include "AssetRegistry.h"
 #include "Renderer/MeshHandle.h"
+#include "Assets/MaterialRegistry.h"
 
 class MeshRegistry : public AssetRegistry<MeshHandle>
 {
 public:
 	using BaseRegistryType = AssetRegistry;
+	using AssetRegistry::AssetRegistry;
 
 	struct Vertex
 	{
@@ -17,6 +19,7 @@ public:
 		float Color[3];
 		float TextureCoordinates[2];
 		float Tangent[3];
+		uint32_t MaterialIndex;
 
 		static void AddVertexToLayout(VertexBufferLayout& layout)
 		{
@@ -25,6 +28,7 @@ public:
 			layout.Push<float>(3);
 			layout.Push<float>(2);
 			layout.Push<float>(3);
+			layout.Push<uint32_t>(1);
 		}
 	};
 
@@ -39,9 +43,22 @@ public:
 		}
 	};
 
-    const MeshHandle* LoadMesh(const aiMesh* mesh, const std::string& meshName);
+	const MeshHandle* LoadMesh
+	(
+		const std::vector<tinyobj::shape_t>& shapes,
+		const tinyobj::attrib_t& attrib,
+		const std::string& meshName,
+		const MaterialRange* materialRange
+	);
 private:
 
-	static std::vector<TriangleWithAdjacency> BuildTriangles(const aiMesh* mesh);
+	static void BuildTriangles
+	(
+		const tinyobj::attrib_t& attrib,
+		const tinyobj::mesh_t& meshSource,
+		const MaterialRange* materialRange,
+		std::vector<TriangleWithAdjacency>& triangles
+	);
+
 	static std::unique_ptr<MeshHandle> CreateMeshHandle(const std::vector<TriangleWithAdjacency>& triangles, const VertexBufferLayout& layout);
 };

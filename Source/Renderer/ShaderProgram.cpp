@@ -1,5 +1,5 @@
+#include <glad/gl.h>
 #include "Renderer/ShaderProgram.h"
-#include <glad/glad.h>
 #include <spdlog/spdlog.h>
 
 ShaderProgram::ShaderProgram()

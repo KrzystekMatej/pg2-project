@@ -1,10 +1,12 @@
-#include <glad/glad.h>
+#include <glad/gl.h>
 #include "Core/Application.h"
 
 #include <iostream>
 #include <spdlog/spdlog.h>
 
 #include "Core/Time.h"
+#include "Scene/SceneLoader.h"
+#include "Assets/MeshRegistry.h"
 
 Application* Application::CreateInstance(const std::filesystem::path& projectConfigPath)
 {
@@ -22,24 +24,29 @@ Application* Application::CreateInstance(const std::filesystem::path& projectCon
 	return new Application(projectConfigPath);
 }
 
+Application::Application(const std::filesystem::path& projectConfigPath)
+	: m_Project(Project::Load(projectConfigPath)) {}
+
 Application::~Application()
 {
-	this->TerminateApplication();
+	this->Terminate();
 }
 
-bool Application::Init()
+bool Application::Initialize()
 {
-	if (CreateWindow(1920, 1080, "PG-2") && m_Window.MakeContext(1))
+	if (PrepareWindow(1920, 1080, m_Project.GetConfig().Name.c_str()) && m_Window.MakeContext(1))
 	{
 		m_Window.InitializeGL();
 		m_Window.SetCallbacks();
-		m_ActiveScene.Load(m_Project, m_Window, m_AssetManager);
+		m_AssetManager.Initialize();
+		SceneLoader::Load(&m_ActiveScene, "", m_Project, &m_Window, m_AssetManager);
+		m_RenderSystem.Initialize(m_AssetManager);
 		return true;
 	}
 	return false;
 }
 
-bool Application::CreateWindow(int width, int height, const char* title)
+bool Application::PrepareWindow(int width, int height, const char* title)
 {
 	GLFWwindow* glfwWindow = glfwCreateWindow(width, height, title, nullptr, nullptr);
 	if (!glfwWindow)
@@ -69,7 +76,7 @@ void Application::Run()
 		m_AISystem.Update(m_ActiveScene);
 
 		m_Window.Clear();
-		m_RenderSystem.Draw(m_ActiveScene);
+		m_RenderSystem.Draw(m_ActiveScene, m_Window.GetAspectRatio());
 		m_Window.SwapBuffers();
 	}
 }
@@ -86,7 +93,7 @@ void Application::PrintInfo() const
 	spdlog::info("GLFW Version: {}.{}.{}", major, minor, revision);
 }
 
-void Application::TerminateApplication() const
+void Application::Terminate() const
 {
 	glfwTerminate();
 }

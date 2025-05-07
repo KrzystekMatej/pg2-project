@@ -11,7 +11,7 @@ int main()
 
 	assert(app && "Application is null!");
 
-	if (app->Init())
+	if (app->Initialize())
 	{
 		app->PrintInfo();
 		app->Run();

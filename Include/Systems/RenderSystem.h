@@ -1,12 +1,14 @@
 #pragma once
+#include "Assets/AssetManager.h"
 #include "Renderer/Renderer.h"
 #include "Scene/Scene.h"
+#include "Renderer/ShaderStorageBuffer.h"
 
 class RenderSystem
 {
 public:
-
-    void Draw(Scene& scene) const;
+	void Initialize(const AssetManager& assetManager) const;
+    void Draw(Scene& scene, float aspectRatio) const;
 private:
     Renderer m_Renderer = Renderer(GL_TRIANGLES);//musíš upravit - prozatímní
 };

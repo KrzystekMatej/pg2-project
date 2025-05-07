@@ -1,7 +1,5 @@
 #pragma once
-#include <glad/glad.h>
 #include <GLFW/glfw3.h>
-#include <memory>
 #include <glm/vec2.hpp>
 #include "EventSystem/Events/FrameBufferSizeEvent.h"
 
@@ -16,9 +14,10 @@ public:
     int GetWidth() const { return m_Width; }
     int GetHeight() const { return m_Height; }
     const char* GetTitle() const { return m_Title; }
+    float GetAspectRatio() const { return static_cast<float>(m_Width) / static_cast<float>(m_Height); }
 
     bool MakeContext(int interval) const;
-    void InitializeGL();
+    void InitializeGL() const;
     bool IsOpen() const { return !glfwWindowShouldClose(m_Window); }
     void SwapBuffers() const { glfwSwapBuffers(m_Window); }
     void Clear() const;

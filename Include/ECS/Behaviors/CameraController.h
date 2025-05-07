@@ -8,18 +8,17 @@
 class CameraController : public Behavior
 {
 public:
-	CameraController(Entity entity, float speed, float mouseSensitivity, const Window& window)
+	CameraController(Entity entity, float speed, float mouseSensitivity, const Window* window)
 		: Behavior(entity), m_Speed(speed), m_MouseSensitivity(mouseSensitivity), m_Window(window), m_Input(0.0f) {}
 	void Awake() override;
 	void Update() override;
 private:
 	void OnKeyPressed(const Event& event);
 	void OnCursorPositionChanged(const Event& event);
-	void OnFrameBufferSizeChanged(const Event& event);
 
 	float m_Speed;
 	float m_MouseSensitivity;
-	const Window& m_Window;
+	const Window* m_Window;
 
 	glm::vec3 m_Input;
 };

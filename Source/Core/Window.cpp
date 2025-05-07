@@ -1,3 +1,4 @@
+#include <glad/gl.h>
 #include "Core/Window.h"
 
 #include <spdlog/spdlog.h>
@@ -48,22 +49,23 @@ bool Window::MakeContext(int interval) const
     glfwMakeContextCurrent(m_Window);
     glfwSwapInterval(interval);
 
-    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress) && !gladLoadGL())
+    if (!gladLoadGL(glfwGetProcAddress))
     {
         spdlog::critical("Failed to initialize GLAD!");
         return false;
     }
+
     return true;
 }
 
-void Window::InitializeGL()
+void Window::InitializeGL() const
 {
     glClipControl(GL_UPPER_LEFT, GL_NEGATIVE_ONE_TO_ONE);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_STENCIL_TEST);
     glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
     glEnable(GL_MULTISAMPLE);
-    //glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+    glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
     glViewport(0, 0, m_Width, m_Height);
 }
 
@@ -90,9 +92,9 @@ void Window::OnFrameBufferSizeChanged(const Event& event)
 
 glm::vec2 Window::GetCursorPosition() const
 {
-    double xpos, ypos;
-    glfwGetCursorPos(m_Window, &xpos, &ypos);
-    return glm::vec2(xpos, ypos);
+    double x, y;
+    glfwGetCursorPos(m_Window, &x, &y);
+    return { x, y };
 }
 
 void Window::OnKeyPressed(const Event& event) const

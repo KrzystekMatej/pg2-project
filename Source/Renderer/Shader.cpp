@@ -1,5 +1,5 @@
+#include <glad/gl.h>
 #include "Renderer/Shader.h"
-#include <glad/glad.h>
 #include <spdlog/spdlog.h>
 #include <fstream>
 #include <sstream>

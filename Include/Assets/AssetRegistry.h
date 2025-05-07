@@ -3,6 +3,7 @@
 #include <memory>
 #include <unordered_map>
 #include <spdlog/spdlog.h>
+#include "Project/Project.h"
 #include "Utils/Text.h"
 
 class AssetRegistryBase

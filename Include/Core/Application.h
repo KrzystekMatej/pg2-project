@@ -5,29 +5,22 @@
 #include "Assets/MaterialRegistry.h"
 #include "Scene/Scene.h"
 #include "Systems/AISystem.h"
-#include "Assets/ShaderRegistry.h"
-#include "Assets/MeshRegistry.h"
 #include "Project/Project.h"
 
 class Application
 {
 public:
 	static Application* CreateInstance(const std::filesystem::path& projectConfigPath);
-	Application(const std::filesystem::path& projectConfigPath) : m_Project(Project::Load(projectConfigPath))
-	{
-		m_AssetManager.AddRegistry<ShaderRegistry>();
-		m_AssetManager.AddRegistry<MeshRegistry>();
-		m_AssetManager.AddRegistry<MaterialRegistry>();
-		m_AssetManager.AddRegistry<TextureRegistry>();
-	}
+	Application(const std::filesystem::path& projectConfigPath);
 	~Application();
 
-	bool Init();
+	bool Initialize();
+
 	void Run();
 	void PrintInfo() const;
 private:
-	bool CreateWindow(int width, int height, const char* title);
-	void TerminateApplication() const;
+	bool PrepareWindow(int width, int height, const char* title);
+	void Terminate() const;
 
 	Window m_Window;
 	Project m_Project;

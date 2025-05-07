@@ -8,6 +8,7 @@ class ShaderRegistry : public AssetRegistry<ShaderProgram>
 {
 public:
 	using BaseRegistryType = AssetRegistry;
+	using AssetRegistry::AssetRegistry;
 
 	const ShaderProgram* LoadShaderProgram
 	(

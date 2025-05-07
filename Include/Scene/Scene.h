@@ -1,18 +1,23 @@
 #pragma once
 #include <entt/entt.hpp>
-#include "Assets/AssetManager.h"
-#include "Core/Window.h"
-#include "Project/Project.h"
+
+class SceneLoader;
 
 class Scene
 {
 public:
     Scene() = default;
-    void Load(const Project& project, const Window& window, AssetManager& assetManager);
+    Scene(const Scene&) = delete;
+    Scene& operator=(const Scene&) = delete;
+    Scene(Scene&&) = default;
+    Scene& operator=(Scene&&) = default;
+    ~Scene() = default;
+
     entt::registry& GetRegistry() { return m_Registry; }
     const entt::registry& GetRegistry() const { return m_Registry; }
-    entt::entity GetActiveCamera() const { return  m_ActiveCamera; }
+    entt::entity GetActiveCameraHandle() const { return  m_CameraHandle; }
 private:
+    friend SceneLoader;
     entt::registry m_Registry;
-    entt::entity m_ActiveCamera;
+    entt::entity m_CameraHandle;
 };

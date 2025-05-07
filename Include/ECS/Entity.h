@@ -6,8 +6,10 @@ class Entity
 {
 public:
 	Entity() = default;
-	Entity(entt::entity entityHandle, Scene* scene)
-		: m_EntityHandle(entityHandle), m_Scene(scene) { }
+	Entity(Scene* scene) : m_Scene(scene)
+	{
+		m_EntityHandle = m_Scene->GetRegistry().create();
+	}
 	Entity(const Entity& other) = default;
 
 	template<typename T, typename... Args>

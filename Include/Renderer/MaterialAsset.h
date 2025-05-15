@@ -4,10 +4,11 @@
 #include <glm/glm.hpp>
 #include "Texture.h"
 
-enum class Map : uint8_t { Diffuse, Specular, Glossiness, Base, Roughness, Metallic, RMA, Bump, Opacity, Emission, MapCount };
+enum class Map : uint8_t { Diffuse, Specular, Glossiness, RMA, Normal, Opacity, Emission, MapCount };
 #define IOR_AIR 1.000293f
 #define IOR_WATER 1.33f
 #define IOR_GLASS 1.5f
+#define AO_DEFAULT 1.0f
 
 #pragma pack(push, 1)
 struct GLMaterial
@@ -69,10 +70,7 @@ private:
 		glm::vec3(1.0f),
 		glm::vec3(1.0f),
 		glm::vec3(1.0f),
-		glm::vec3(1.0f),
-		glm::vec3(1.0f),
-		glm::vec3(0.0f),
-		glm::vec3(1.0f),
+		glm::vec3(1.0f, 0.0f, 1.0f),
 		glm::vec3(0.0f),
 		glm::vec3(1.0f),
 		glm::vec3(0.0f)

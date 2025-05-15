@@ -9,6 +9,4 @@ class RenderSystem
 public:
 	void Initialize(const AssetManager& assetManager) const;
     void Draw(Scene& scene, float aspectRatio) const;
-private:
-    Renderer m_Renderer = Renderer(GL_TRIANGLES);//musíš upravit - prozatímní
 };

@@ -11,13 +11,20 @@ enum class UniformType
 	Vec3,
 	Vec4,
 	Float,
-	Int32
+	Int32,
+	UInt32
+};
+
+enum class ShaderType
+{
+	Normal,
+	DirectPBR
 };
 
 class ShaderProgram
 {
 public:
-	explicit ShaderProgram();
+	explicit ShaderProgram(ShaderType type);
 
 	ShaderProgram(const ShaderProgram&) = delete;
 	ShaderProgram& operator=(const ShaderProgram&) = delete;
@@ -27,6 +34,8 @@ public:
 
 	~ShaderProgram();
 
+	ShaderType GetType() const { return m_Type; }
+
 	void AttachShader(const Shader& shader) const;
 	void DetachShader(const Shader& shader) const;
 	bool Link() const;
@@ -34,11 +43,11 @@ public:
 	void Unbind() const;
 	int GetUniformLocation(const std::string& name) const;
 	void SetUniform(UniformType uniformType, const std::string& name, const void* value) const;
-
 private:
 	bool CheckLinking() const;
 	void Validate() const;
 
 	uint32_t m_Id;
+	ShaderType m_Type;
 	mutable std::unordered_map<std::string, int> m_UniformLocationCache;
 };

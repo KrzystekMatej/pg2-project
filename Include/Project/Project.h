@@ -26,17 +26,17 @@ public:
 
     std::filesystem::path GetSceneDirectory() const
     {
-        return GetAssetDirectory() / m_Config.sceneDirectory;
+        return GetAssetDirectory() / m_Config.SceneDirectory;
     }
 
     std::filesystem::path GetShaderDirectory() const
     {
-        return GetAssetDirectory() / m_Config.shaderDirectory;
+        return GetAssetDirectory() / m_Config.ShaderDirectory;
     }
 
     std::filesystem::path GetMeshDirectory() const
     {
-        return GetAssetDirectory() / m_Config.meshDirectory;
+        return GetAssetDirectory() / m_Config.MeshDirectory;
     }
 
     const ProjectConfig& GetConfig() const { return m_Config; }

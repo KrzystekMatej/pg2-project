@@ -13,6 +13,7 @@ public:
 	const ShaderProgram* LoadShaderProgram
 	(
 		const std::filesystem::path& directoryPath,
-		const std::string& shaderName
+		const std::string& shaderName,
+		ShaderType shaderType
 	);
 };

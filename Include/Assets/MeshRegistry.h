@@ -14,11 +14,11 @@ public:
 
 	struct Vertex
 	{
-		float Position[3];
-		float Normal[3];
-		float Color[3];
-		float TextureCoordinates[2];
-		float Tangent[3];
+		glm::vec3 Position;
+		glm::vec3 Normal;
+		glm::vec3 Color;
+		glm::vec2 TextureCoordinates;
+		glm::vec3 Tangent;
 		uint32_t MaterialIndex;
 
 		static void AddVertexToLayout(VertexBufferLayout& layout)

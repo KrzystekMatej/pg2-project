@@ -6,6 +6,27 @@
 #include "ECS/Components/Script.h"
 #include "Assets/ShaderRegistry.h"
 #include "Renderer/ShaderStorageBuffer.h"
+#include "ECS/Components/PointLight.h"
+
+
+void CreateLights(Scene* scene)
+{
+    Entity light1(scene);
+    light1.AddComponent<Transform>();
+    light1.AddComponent<PointLight>(glm::vec3(23.47, 21.31, 20.79));
+
+    Entity light2(scene);
+    light2.AddComponent<Transform>();
+    light2.AddComponent<PointLight>(glm::vec3(23.47, 21.31, 20.79));
+
+    Entity light3(scene);
+    light3.AddComponent<Transform>();
+    light3.AddComponent<PointLight>(glm::vec3(23.47, 21.31, 20.79));
+
+    Entity light4(scene);
+    light4.AddComponent<Transform>();
+    light4.AddComponent<PointLight>(glm::vec3(23.47, 21.31, 20.79));
+}
 
 void SceneLoader::Load(Scene* scene, const std::filesystem::path& filePath, const Project& project, const Window* window, const AssetManager& assetManager)
 {
@@ -14,7 +35,8 @@ void SceneLoader::Load(Scene* scene, const std::filesystem::path& filePath, cons
     const ShaderProgram* program = assetManager.GetRegistry<ShaderRegistry>()->LoadShaderProgram
     (
         project.GetShaderDirectory() / "Normal",
-        "Normal"
+        "Normal",
+        ShaderType::Normal
     );
 
     LoadObj(scene, program, project.GetMeshDirectory() / "lion/lion_head_4k.obj", assetManager);
@@ -25,6 +47,8 @@ void SceneLoader::Load(Scene* scene, const std::filesystem::path& filePath, cons
     cameraEntity.AddComponent<Transform>(glm::vec3(0, 0, 0), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1));
     Script& script = cameraEntity.AddComponent<Script>();
     script.AddBehavior<CameraController>(cameraEntity, 5.f, 0.01f, window);
+
+    CreateLights(scene);
 }
 
 void SceneLoader::LoadObj(Scene* scene, const ShaderProgram* program, const std::filesystem::path& filePath, const AssetManager& assetManager)

@@ -1,17 +1,18 @@
-#include "Assets/ShaderRegistry.h"
 #include <glad/gl.h>
+#include "Assets/ShaderRegistry.h"
 #include <spdlog/spdlog.h>
 #include <filesystem>
 
 const ShaderProgram* ShaderRegistry::LoadShaderProgram
 (
     const std::filesystem::path& directoryPath,
-    const std::string& shaderName
+    const std::string& shaderName,
+    ShaderType shaderType
 )
 {
     if (const ShaderProgram* cached = GetAsset(shaderName)) return cached;
 
-    std::unique_ptr<ShaderProgram> shaderProgram = std::make_unique<ShaderProgram>();
+    std::unique_ptr<ShaderProgram> shaderProgram = std::make_unique<ShaderProgram>(shaderType);
 
     std::vector<std::pair<std::string, uint32_t>> shaderTypes =
     {

@@ -16,9 +16,6 @@ void Renderer::Draw
 	shaderProgram->SetUniform(UniformType::Matrix4x4, "modelMatrix", glm::value_ptr(model));
 	shaderProgram->SetUniform(UniformType::Matrix3x3,"normalMatrix", glm::value_ptr(normal));
 	shaderProgram->SetUniform(UniformType::Matrix4x4, "pvmMatrix", glm::value_ptr(pv * model));
-	if (shaderProgram)
-	{
-		vertexArray.Bind();
-		glDrawElements(m_RenderMode, indexBuffer.GetCount(), GL_UNSIGNED_INT, nullptr);
-	}
+	vertexArray.Bind();
+	glDrawElements(m_RenderMode, indexBuffer.GetCount(), GL_UNSIGNED_INT, nullptr);
 }

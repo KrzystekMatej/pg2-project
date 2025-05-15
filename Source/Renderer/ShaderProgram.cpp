@@ -2,9 +2,10 @@
 #include "Renderer/ShaderProgram.h"
 #include <spdlog/spdlog.h>
 
-ShaderProgram::ShaderProgram()
+ShaderProgram::ShaderProgram(ShaderType type)
 {
 	m_Id = glCreateProgram();
+	m_Type = type;
 }
 
 ShaderProgram::ShaderProgram(ShaderProgram&& other) noexcept
@@ -98,6 +99,9 @@ void ShaderProgram::SetUniform(UniformType uniformType, const std::string& name,
 	{
 	case UniformType::Int32:
 		glUniform1i(location, *static_cast<const GLint*>(value));
+		break;
+	case UniformType::UInt32:
+		glUniform1ui(location, *static_cast<const GLuint*>(value));
 		break;
 	case UniformType::Float:
 		glUniform1f(location, *static_cast<const GLfloat*>(value));

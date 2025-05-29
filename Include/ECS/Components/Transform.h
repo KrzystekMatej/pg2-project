@@ -55,33 +55,12 @@ struct Transform
 
     glm::mat3 GetNormalMatrix() const
     {
-        glm::mat3 result = GetParentNormalMatrix();
-
-        Entity current = Parent;
-        while (current)
-        {
-            const Transform& parentTransform = current.GetComponent<Transform>();
-            result = parentTransform.GetParentNormalMatrix() * result;
-            current = parentTransform.Parent;
-        }
-
-        return result;
+        return glm::transpose(glm::inverse(glm::mat3(GetLocalToWorldMatrix())));
     }
 
     glm::mat3 GetParentNormalMatrix() const
     {
-        glm::vec3 forward = GetForwardVector();
-        glm::vec3 right = glm::normalize(glm::cross(forward, WorldUp));
-        glm::vec3 up = glm::normalize(glm::cross(right, forward));
-
-        glm::vec3 look = -forward;
-
-        return glm::mat3
-        {
-            right.x * Scale.x,  right.y * Scale.x,  right.z * Scale.z,
-            up.x * Scale.y,     up.y * Scale.y,     up.z * Scale.z,
-            look.x * Scale.z,   look.y * Scale.z,   look.z * Scale.z,
-        };
+        return glm::transpose(glm::inverse(glm::mat3(GetLocalToParentMatrix())));
     }
 
     glm::mat4 GetWorldToLocalMatrix() const

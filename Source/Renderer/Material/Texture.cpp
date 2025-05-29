@@ -1,5 +1,5 @@
 #include <glad/gl.h>
-#include "Renderer/Texture.h"
+#include "Renderer/Material/Texture.h"
 
 Texture::~Texture()
 {

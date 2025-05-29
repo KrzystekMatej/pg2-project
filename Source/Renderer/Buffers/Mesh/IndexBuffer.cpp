@@ -1,4 +1,4 @@
-#include "Renderer/IndexBuffer.h"
+#include "Renderer/Buffers/Mesh/IndexBuffer.h"
 #include <glad/gl.h>
 
 IndexBuffer::IndexBuffer(const void* data, uint32_t count) : m_Count(count)

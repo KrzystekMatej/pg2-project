@@ -1,6 +1,5 @@
 #version 460 core
 #extension GL_ARB_bindless_texture : require
-#extension GL_ARB_gpu_shader_int64 : enable
 
 in vec3 worldPosition;
 in vec3 worldNormal;
@@ -26,7 +25,7 @@ uniform vec3 cameraPosition;
 
 struct Material
 {
-    uint64_t textures[MapCount];
+    uvec2 textures[MapCount];
 };
 
 layout(std430, binding = MATERIAL_BUFFER_ID) buffer MaterialBuffer
@@ -82,7 +81,7 @@ vec3 FresnelSchlick(float cosTheta, vec3 F0)
     return F0 + (1.0 - F0) * pow(1.0 - cosTheta, 5.0);
 }
 
-void main()
+void main(void)
 {
     Material material = materials[fragMaterialIndex];
 
@@ -92,57 +91,10 @@ void main()
     vec3 B = cross(N, T) * worldTangent.w;
     mat3 TBN = mat3(T, B, N);
     sampler2D normalMap = sampler2D(material.textures[MapNormal]);
+    vec3 normalTangent = texture(normalMap, fragTexCoord).rgb;
+    
+   
 
-    vec3 normalTangent = texture(normalMap, fragTexCoords).rgb;
-    normalTangent = normalize(normalTangent * 2.0 - 1.0);
-    N = normalize(TBN * normalTangent);
-
-    vec3 V = normalize(cameraPosition - worldPosition);
-
-    sampler2D diffuseMap = sampler2D(material.textures[MapDiffuse]);
-    sampler2D rmaMap = sampler2D(material.textures[MapRMA]);
-
-    vec3 albedo = pow(texture(diffuseMap, fragTexCoords).rgb, vec3(2.2));
-    vec3 rma = texture(rmaMap, fragTexCoords).rgb;
-
-    float roughness = rma.r;
-    float metallic = rma.g;
-    float ao = rma.b;
-
-    vec3 F0 = vec3(0.04);
-    F0 = mix(F0, albedo, metallic);
-
-    vec3 Lo = vec3(0.0);
-    for (int i = 0; i < lightCount; ++i)
-    {
-        vec3 L = normalize(lights[i].position - worldPosition);
-        vec3 H = normalize(V + L);
-        float distance = length(lights[i].position - worldPosition);
-        float attenuation = 1.0 / (distance * distance);
-        vec3 radiance = lights[i].color * attenuation;
-
-        float NDF = DistributionGGX(N, H, roughness);
-        float G = GeometrySmith(N, V, L, roughness);
-        vec3 F = FresnelSchlick(max(dot(H, V), 0.0), F0);
-
-        vec3 kS = F;
-        vec3 kD = vec3(1.0) - kS;
-        kD *= 1.0 - metallic;
-
-        vec3 numerator = NDF * G * F;
-        float denominator = 4.0 * max(dot(N, V), 0.0) * max(dot(N, L), 0.0) + 0.0001;
-        vec3 specular = numerator / denominator;
-
-        float NdotL = max(dot(N, L), 0.0);
-        Lo += (kD * albedo / PI + specular) * radiance * NdotL;
-    }
-
-    vec3 ambient = vec3(0.03) * albedo * ao;
-    vec3 color = ambient + Lo;
-
-    color = color / (color + vec3(1.0));
-    color = pow(color, vec3(1.0 / 2.2));
-
-    fragColor = vec4(color, 1.0);
+    vec3 normalColor = normalize(worldNormal) * 0.5 + 0.5;
+    fragColor = vec4(normalColor, 1.0);
 }
-

@@ -1,11 +1,11 @@
 #version 460 core
 
-layout(location = 0) out vec4 FragColor;
-
 in vec3 worldNormal;
+
+out vec4 fragColor;
 
 void main(void)
 {
     vec3 normalColor = normalize(worldNormal) * 0.5 + 0.5;
-    FragColor = vec4(normalColor, 1.0);
+    fragColor = vec4(normalColor, 1.0);
 }

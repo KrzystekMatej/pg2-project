@@ -1,11 +1,10 @@
 #include <glad/gl.h>
-#include "Renderer/ShaderProgram.h"
+#include "Renderer/Material/Shaders/ShaderProgram.h"
 #include <spdlog/spdlog.h>
 
-ShaderProgram::ShaderProgram(ShaderType type)
+ShaderProgram::ShaderProgram()
 {
 	m_Id = glCreateProgram();
-	m_Type = type;
 }
 
 ShaderProgram::ShaderProgram(ShaderProgram&& other) noexcept

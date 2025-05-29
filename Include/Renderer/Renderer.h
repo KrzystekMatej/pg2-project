@@ -1,8 +1,8 @@
 #pragma once
 #include <glm/glm.hpp>
-#include "VertexArray.h"
-#include "IndexBuffer.h"
-#include "ShaderProgram.h"
+#include "Buffers/Mesh/VertexArray.h"
+#include "Buffers/Mesh/IndexBuffer.h"
+#include "Material/Shaders/ShaderProgram.h"
 
 class Renderer
 {

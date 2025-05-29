@@ -2,11 +2,11 @@
 #include <string>
 #include "AssetRegistry.h"
 #include "ShaderRegistry.h"
-#include "Renderer/MaterialAsset.h"
+#include "Renderer/Material/MaterialAsset.h"
 #include "Assets/TextureRegistry.h"
 #include <tiny_obj_loader.h>
 
-#include "Renderer/ShaderStorageBuffer.h"
+#include "Renderer/Buffers/ShaderStorageBuffer.h"
 
 namespace MaterialKeys
 {

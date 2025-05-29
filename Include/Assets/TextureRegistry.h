@@ -3,7 +3,7 @@
 #include <glm/glm.hpp>
 #include "AssetRegistry.h"
 #include "GLImage.h"
-#include "Renderer/Texture.h"
+#include "Renderer/Material/Texture.h"
 
 class TextureRegistry : public AssetRegistry<Texture>
 {

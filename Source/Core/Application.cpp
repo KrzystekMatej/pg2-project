@@ -39,6 +39,10 @@ bool Application::Initialize()
 		m_Window.InitializeGL();
 		m_Window.SetCallbacks();
 		m_AssetManager.Initialize();
+		if (!glfwExtensionSupported("GL_ARB_bindless_texture"))
+		{
+			spdlog::critical("GL_ARB_bindless_texture not supported!");
+		}
 		SceneLoader::Load(&m_ActiveScene, "", m_Project, &m_Window, m_AssetManager);
 		m_RenderSystem.Initialize(m_AssetManager);
 		return true;

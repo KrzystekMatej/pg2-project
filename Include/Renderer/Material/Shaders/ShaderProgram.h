@@ -15,16 +15,11 @@ enum class UniformType
 	UInt32
 };
 
-enum class ShaderType
-{
-	Normal,
-	DirectPBR
-};
 
 class ShaderProgram
 {
 public:
-	explicit ShaderProgram(ShaderType type);
+	ShaderProgram();
 
 	ShaderProgram(const ShaderProgram&) = delete;
 	ShaderProgram& operator=(const ShaderProgram&) = delete;
@@ -33,8 +28,6 @@ public:
 	ShaderProgram& operator=(ShaderProgram&& other) noexcept;
 
 	~ShaderProgram();
-
-	ShaderType GetType() const { return m_Type; }
 
 	void AttachShader(const Shader& shader) const;
 	void DetachShader(const Shader& shader) const;
@@ -48,6 +41,5 @@ private:
 	void Validate() const;
 
 	uint32_t m_Id;
-	ShaderType m_Type;
 	mutable std::unordered_map<std::string, int> m_UniformLocationCache;
 };

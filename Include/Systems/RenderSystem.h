@@ -2,7 +2,7 @@
 #include "Assets/AssetManager.h"
 #include "Renderer/Renderer.h"
 #include "Scene/Scene.h"
-#include "Renderer/ShaderStorageBuffer.h"
+#include "Renderer/Buffers/ShaderStorageBuffer.h"
 
 class RenderSystem
 {

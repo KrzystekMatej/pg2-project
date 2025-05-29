@@ -5,8 +5,8 @@
 #include "ECS/Behaviors/CameraController.h"
 #include "ECS/Components/Script.h"
 #include "Assets/ShaderRegistry.h"
-#include "Renderer/ShaderStorageBuffer.h"
 #include "ECS/Components/PointLight.h"
+#include "Renderer/Material/Shaders/Binders/NormalBinder.h"
 
 
 void CreateLights(Scene* scene)
@@ -35,11 +35,13 @@ void SceneLoader::Load(Scene* scene, const std::filesystem::path& filePath, cons
     const ShaderProgram* program = assetManager.GetRegistry<ShaderRegistry>()->LoadShaderProgram
     (
         project.GetShaderDirectory() / "Normal",
-        "Normal",
-        ShaderType::Normal
+        "Normal"
     );
 
-    LoadObj(scene, program, project.GetMeshDirectory() / "lion/lion_head_4k.obj", assetManager);
+    std::vector<ShaderPipeline> pipelines;
+    pipelines.emplace_back(program, std::make_shared<NormalBinder>());
+
+    LoadObj(scene, pipelines, project.GetMeshDirectory() / "lion/lion_head_4k.obj", assetManager);
 
     Entity cameraEntity = Entity(scene);
     scene->m_CameraHandle = cameraEntity.GetID();
@@ -51,12 +53,13 @@ void SceneLoader::Load(Scene* scene, const std::filesystem::path& filePath, cons
     CreateLights(scene);
 }
 
-void SceneLoader::LoadObj(Scene* scene, const ShaderProgram* program, const std::filesystem::path& filePath, const AssetManager& assetManager)
+void SceneLoader::LoadObj(Scene* scene, const std::vector<ShaderPipeline>& pipelines, const std::filesystem::path& filePath, const AssetManager& assetManager)
 {
     const MeshHandle* mesh = assetManager.LoadObjFile(filePath);
 
     Entity entity(scene);
     entity.AddComponent<Transform>();
-    entity.AddComponent<Material>(program);
+    Material& material = entity.AddComponent<Material>();
+    material.pipelines = pipelines;
     entity.AddComponent<Mesh>(mesh);
 }

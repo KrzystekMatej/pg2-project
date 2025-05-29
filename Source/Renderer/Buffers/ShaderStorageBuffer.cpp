@@ -1,5 +1,5 @@
 #include <glad/gl.h>
-#include "Renderer/ShaderStorageBuffer.h"
+#include "Renderer/Buffers/ShaderStorageBuffer.h"
 #include <spdlog/spdlog.h>
 
 ShaderStorageBuffer::ShaderStorageBuffer(uint32_t bindingIndex, size_t capacity, size_t stride)

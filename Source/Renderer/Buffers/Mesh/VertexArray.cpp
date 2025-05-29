@@ -1,4 +1,4 @@
-#include "Renderer/VertexArray.h"
+#include "Renderer/Buffers/Mesh/VertexArray.h"
 
 VertexArray::VertexArray()
 {

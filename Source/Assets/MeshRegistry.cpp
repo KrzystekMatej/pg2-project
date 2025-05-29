@@ -118,9 +118,15 @@ void MeshRegistry::BuildTriangles
 		float r = 1.0f / (deltaUV1.x * deltaUV2.y - deltaUV1.y * deltaUV2.x);
 		glm::vec3 tangent = (edge1 * deltaUV2.y - edge2 * deltaUV1.y) * r;
 
-		triangle.vertices[0].Tangent = tangent;
-		triangle.vertices[2].Tangent = tangent;
-		triangle.vertices[4].Tangent = tangent;
+		glm::vec3 bitangent = (edge2 * deltaUV1.x - edge1 * deltaUV2.x) * r;
+		glm::vec3 normal = triangle.vertices[0].Normal;
+
+		float handedness = (glm::dot(glm::cross(normal, tangent), bitangent) < 0.0f) ? -1.0f : 1.0f;
+		glm::vec4 tangent4 = glm::vec4(glm::normalize(tangent), handedness);
+
+		triangle.vertices[0].Tangent = tangent4;
+		triangle.vertices[2].Tangent = tangent4;
+		triangle.vertices[4].Tangent = tangent4;
 
 		triangles.push_back(triangle);
 		indexOffset += faceVertexCount;

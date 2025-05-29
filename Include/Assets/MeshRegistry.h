@@ -3,7 +3,7 @@
 #include <array>
 #include <tiny_obj_loader.h>
 #include "AssetRegistry.h"
-#include "Renderer/MeshHandle.h"
+#include "Renderer/Buffers/Mesh/MeshHandle.h"
 #include "Assets/MaterialRegistry.h"
 
 class MeshRegistry : public AssetRegistry<MeshHandle>
@@ -18,7 +18,7 @@ public:
 		glm::vec3 Normal;
 		glm::vec3 Color;
 		glm::vec2 TextureCoordinates;
-		glm::vec3 Tangent;
+		glm::vec4 Tangent;
 		uint32_t MaterialIndex;
 
 		static void AddVertexToLayout(VertexBufferLayout& layout)
@@ -27,7 +27,7 @@ public:
 			layout.Push<float>(3);
 			layout.Push<float>(3);
 			layout.Push<float>(2);
-			layout.Push<float>(3);
+			layout.Push<float>(4);
 			layout.Push<uint32_t>(1);
 		}
 	};

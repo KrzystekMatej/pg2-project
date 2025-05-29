@@ -1,6 +1,6 @@
 #pragma once
-#include "Renderer/VertexArray.h"
-#include "Renderer/IndexBuffer.h"
+#include "VertexArray.h"
+#include "IndexBuffer.h"
 
 class MeshHandle
 {

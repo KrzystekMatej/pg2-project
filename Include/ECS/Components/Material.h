@@ -1,10 +1,9 @@
 #pragma once
-#include "Renderer/ShaderProgram.h"
+#include <vector>
+#include "Renderer/Material/Shaders/ShaderPipeline.h"
 
 struct Material
 {
-	Material(const ShaderProgram* shaderProgram)
-		: ShaderProgram(shaderProgram) {}
-
-	const ShaderProgram* ShaderProgram;
+	Material() = default;
+	std::vector<ShaderPipeline> pipelines;
 };

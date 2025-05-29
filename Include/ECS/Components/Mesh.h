@@ -1,5 +1,5 @@
 #pragma once
-#include "Renderer/MeshHandle.h"
+#include "Renderer/Buffers/Mesh/MeshHandle.h"
 
 struct Mesh
 {

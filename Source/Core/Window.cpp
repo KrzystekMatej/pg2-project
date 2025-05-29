@@ -55,6 +55,12 @@ bool Window::MakeContext(int interval) const
         return false;
     }
 
+    if (!glfwExtensionSupported("GL_ARB_bindless_texture"))
+    {
+        spdlog::critical("GL_ARB_bindless_texture not supported!");
+        return false;
+    }
+
     return true;
 }
 

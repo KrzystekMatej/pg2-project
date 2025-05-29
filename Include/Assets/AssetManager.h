@@ -5,9 +5,9 @@
 #include <memory>
 #include <filesystem>
 #include "AssetRegistry.h"
-#include "Renderer/MeshHandle.h"
-#include "Renderer/MaterialAsset.h"
-#include "Renderer/ShaderStorageBuffer.h"
+#include "Renderer/Buffers/Mesh/MeshHandle.h"
+#include "Renderer/Material/MaterialAsset.h"
+#include "Renderer/Buffers/ShaderStorageBuffer.h"
 
 class AssetManager
 {

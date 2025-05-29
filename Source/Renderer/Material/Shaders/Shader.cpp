@@ -1,5 +1,5 @@
 #include <glad/gl.h>
-#include "Renderer/Shader.h"
+#include "Renderer/Material/Shaders/Shader.h"
 #include <spdlog/spdlog.h>
 #include <fstream>
 #include <sstream>
@@ -19,7 +19,7 @@ Shader::~Shader()
     }
 }
 
-bool Shader::LoadSource(const std::filesystem::path& filePath) const
+bool Shader::LoadSource(const std::filesystem::path& filePath)
 {
     std::ifstream file(filePath);
     if (!file)
@@ -30,17 +30,14 @@ bool Shader::LoadSource(const std::filesystem::path& filePath) const
 
     std::stringstream buffer;
     buffer << file.rdbuf();
-    std::string sourceCode = buffer.str();
-
-    const char* src = sourceCode.c_str();
-    glShaderSource(m_Id, 1, &src, nullptr);
-
+    SetSource(buffer.str());
     return true;
 }
 
-void Shader::SetSource(const std::string& source) const
+void Shader::SetSource(const std::string& source)
 {
-    const char* src = source.c_str();
+    m_Source = source;
+    const char* src = m_Source.c_str();
     glShaderSource(m_Id, 1, &src, nullptr);
 }
 
@@ -60,6 +57,12 @@ bool Shader::CheckCompilation() const
         glGetShaderInfoLog(m_Id, sizeof(log), nullptr, log);
 
         spdlog::error("Shader Compilation Failure:\n{}", log);
+
+        GLint major = 0;
+        GLint minor = 0;
+        glGetIntegerv(GL_MAJOR_VERSION, &major);
+        glGetIntegerv(GL_MINOR_VERSION, &minor);
+        spdlog::info("GL_VERSION during shader compile: {}.{}", major, minor);
         return false;
     }
     return true;

@@ -1,4 +1,4 @@
-#include <glad/gl.h>
+#include <glad/glad.h>
 #include "Core/Application.h"
 
 #include <iostream>
@@ -20,6 +20,9 @@ Application* Application::CreateInstance(const std::filesystem::path& projectCon
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 	glfwWindowHint(GLFW_SAMPLES, 8);
+#if DEBUG_LOGGING == 1
+	glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GL_TRUE);
+#endif
 
 	return new Application(projectConfigPath);
 }
@@ -37,6 +40,9 @@ bool Application::Initialize()
 	if (PrepareWindow(1920, 1080, m_Project.GetConfig().Name.c_str()) && m_Window.MakeContext(1))
 	{
 		m_Window.InitializeGL();
+#if DEBUG_LOGGING == 1
+		EnableOpenGLDebug();
+#endif
 		m_Window.SetCallbacks();
 		m_AssetManager.Initialize();
 		if (!glfwExtensionSupported("GL_ARB_bindless_texture"))
@@ -72,6 +78,7 @@ bool Application::PrepareWindow(int width, int height, const char* title)
 
 void Application::Run()
 {
+	m_Window.SetViewport();
 	while (m_Window.IsOpen())
 	{
 		Time::Update();
@@ -101,4 +108,21 @@ void Application::Terminate() const
 {
 	glfwTerminate();
 }
+
+#if DEBUG_LOGGING == 1
+void APIENTRY GLDebugOutput(GLenum source, GLenum type, GLuint id,
+	GLenum severity, GLsizei length,
+	const GLchar* message, const void* userParam)
+{
+	std::cerr << "[OpenGL DEBUG] " << message << std::endl;
+}
+
+void Application::EnableOpenGLDebug() const
+{
+	glEnable(GL_DEBUG_OUTPUT);
+	glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
+	glDebugMessageCallback(GLDebugOutput, nullptr);
+	glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, nullptr, GL_TRUE);
+}
+#endif
 

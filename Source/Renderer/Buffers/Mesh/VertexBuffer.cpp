@@ -1,4 +1,4 @@
-#include <glad/gl.h>
+#include <glad/glad.h>
 #include "Renderer/Buffers/Mesh/VertexBuffer.h"
 
 VertexBuffer::VertexBuffer(const void* data, size_t size)
@@ -18,7 +18,7 @@ VertexBuffer& VertexBuffer::operator=(VertexBuffer&& other) noexcept
 {
     if (this != &other)
     {
-        glDeleteBuffers(1, &m_Id);
+		if (m_Id) glDeleteBuffers(1, &m_Id);
         m_Id = other.m_Id;
         other.m_Id = 0;
     }

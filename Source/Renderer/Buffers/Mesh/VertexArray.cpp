@@ -16,7 +16,7 @@ VertexArray& VertexArray::operator=(VertexArray&& other) noexcept
 {
 	if (this != &other)
 	{
-		glDeleteVertexArrays(1, &m_Id);
+		if (m_Id) glDeleteVertexArrays(1, &m_Id);
 		m_Id = other.m_Id;
 		m_VertexBuffers = std::move(other.m_VertexBuffers);
 		other.m_Id = 0;

@@ -39,6 +39,18 @@ public:
         return it->second.get();
     }
 
+    std::vector<const T*> GetValues()
+    {
+        std::vector<const T*> values;
+        values.reserve(m_AssetMap.size());
+
+        for (const auto& [key, asset] : m_AssetMap)
+        {
+            values.push_back(asset.get());
+        }
+
+        return values;
+    }
 protected:
     std::unordered_map<std::string, std::unique_ptr<T>> m_AssetMap;
 };

@@ -1,4 +1,4 @@
-#include <glad/gl.h>
+#include <glad/glad.h>
 #include "Core/Window.h"
 
 #include <spdlog/spdlog.h>
@@ -49,9 +49,9 @@ bool Window::MakeContext(int interval) const
     glfwMakeContextCurrent(m_Window);
     glfwSwapInterval(interval);
 
-    if (!gladLoadGL(glfwGetProcAddress))
+    if (!gladLoadGLLoader(reinterpret_cast<GLADloadproc>(glfwGetProcAddress)))
     {
-        spdlog::critical("Failed to initialize GLAD!");
+        spdlog::critical("Failed to initialise GLAD");
         return false;
     }
 
@@ -69,15 +69,20 @@ void Window::InitializeGL() const
     glClipControl(GL_UPPER_LEFT, GL_NEGATIVE_ONE_TO_ONE);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_STENCIL_TEST);
+    glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
     glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
     glEnable(GL_MULTISAMPLE);
-    glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
-    glViewport(0, 0, m_Width, m_Height);
 }
 
 void Window::Clear() const
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+}
+
+void Window::SetViewport() const
+{
+    glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+    glViewport(0, 0, m_Width, m_Height);
 }
 
 void Window::SetCallbacks() const

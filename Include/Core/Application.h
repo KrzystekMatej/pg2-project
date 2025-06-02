@@ -6,6 +6,7 @@
 #include "Scene/Scene.h"
 #include "Systems/AISystem.h"
 #include "Project/Project.h"
+#include "Config.h"
 
 class Application
 {
@@ -21,6 +22,9 @@ public:
 private:
 	bool PrepareWindow(int width, int height, const char* title);
 	void Terminate() const;
+#if DEBUG_LOGGING == 1
+	void EnableOpenGLDebug() const;
+#endif
 
 	Window m_Window;
 	Project m_Project;

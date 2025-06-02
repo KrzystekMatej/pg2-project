@@ -50,9 +50,6 @@ MaterialAsset MaterialRegistry::LoadMaterial
 	MaterialAsset material;
 	material.Name = name;
 
-	material.Shininess = materialSource.shininess;
-	material.Roughness = materialSource.roughness;
-	material.Metallic = materialSource.metallic;
 	material.Ior = materialSource.ior;
 
 	const std::string& reflectivityStr = GetCustomParameter(materialSource, std::string(MaterialKeys::Reflectivity));
@@ -61,26 +58,26 @@ MaterialAsset MaterialRegistry::LoadMaterial
 	material.SetFallback(Map::Diffuse, glm::vec3(materialSource.diffuse[0], materialSource.diffuse[1], materialSource.diffuse[2]));
 	material.SetFallback(Map::Specular, glm::vec3(materialSource.specular[0], materialSource.specular[1], materialSource.specular[2]));
 	material.SetFallback(Map::Glossiness, glm::vec3(materialSource.sheen));
-	material.SetFallback(Map::RMA, glm::vec3(materialSource.roughness, materialSource.metallic, AO_DEFAULT));
+	material.SetFallback(Map::RMA, glm::vec3(materialSource.roughness, materialSource.metallic, MaterialDefaults::RMA.z));
 	material.SetFallback(Map::Opacity, glm::vec3(materialSource.dissolve));
 	material.SetFallback(Map::Emission, glm::vec3(materialSource.emission[0], materialSource.emission[1], materialSource.emission[2]));
 
-
-	material.SetTexture(Map::Diffuse, GetTextureOrPixel(directoryPath, materialSource.diffuse_texname, textureRegistry, material.GetFallback(Map::Diffuse)));
-	material.SetTexture(Map::Specular, GetTextureOrPixel(directoryPath, materialSource.specular_texname, textureRegistry, material.GetFallback(Map::Specular)));
-	material.SetTexture(Map::Glossiness, GetTextureOrPixel(directoryPath, materialSource.sheen_texname, textureRegistry, material.GetFallback(Map::Glossiness)));
+	material.SetTexture(Map::Diffuse, GetTextureOrPixel(directoryPath, materialSource.diffuse_texname, ColorSpace::SRGB, textureRegistry, material.GetFallback(Map::Diffuse)));
+	material.SetTexture(Map::Specular, GetTextureOrPixel(directoryPath, materialSource.specular_texname, ColorSpace::SRGB, textureRegistry, material.GetFallback(Map::Specular)));
+	material.SetTexture(Map::Glossiness, GetTextureOrPixel(directoryPath, materialSource.sheen_texname, ColorSpace::Linear, textureRegistry, material.GetFallback(Map::Glossiness)));
 
 	material.SetTexture(Map::RMA, GetRMATexture(materialSource, material, directoryPath, textureRegistry));
 
-	material.SetTexture(Map::Normal, GetTextureOrPixel(directoryPath, materialSource.bump_texname, textureRegistry, material.GetFallback(Map::Normal)));
-	material.SetTexture(Map::Opacity, GetTextureOrPixel(directoryPath, materialSource.alpha_texname, textureRegistry, material.GetFallback(Map::Opacity)));
-	material.SetTexture(Map::Emission, GetTextureOrPixel(directoryPath, materialSource.emissive_texname, textureRegistry, material.GetFallback(Map::Emission)));
+	material.SetTexture(Map::Normal, GetTextureOrPixel(directoryPath, materialSource.bump_texname, ColorSpace::Linear, textureRegistry, material.GetFallback(Map::Normal)));
+	material.SetTexture(Map::Opacity, GetTextureOrPixel(directoryPath, materialSource.alpha_texname, ColorSpace::Linear, textureRegistry, material.GetFallback(Map::Opacity)));
+	material.SetTexture(Map::Emission, GetTextureOrPixel(directoryPath, materialSource.emissive_texname, ColorSpace::SRGB, textureRegistry, material.GetFallback(Map::Emission)));
 	return material;
 }
 
 const std::string& MaterialRegistry::GetCustomParameter(const tinyobj::material_t& materialSource, const std::string& key)
 {
 	std::map<std::string, std::string>::const_iterator it = materialSource.unknown_parameter.find(key);
+
 	if (it != materialSource.unknown_parameter.end())
 	{
 		return it->second;
@@ -89,15 +86,28 @@ const std::string& MaterialRegistry::GetCustomParameter(const tinyobj::material_
 	return Utils::EmptyString();
 }
 
-const Texture* MaterialRegistry::GetTextureOrPixel(const std::filesystem::path& directoryPath, const std::string& textureFile, TextureRegistry* textureRegistry, const glm::vec3& fallback)
+const Texture* MaterialRegistry::GetTextureOrPixel
+(
+	const std::filesystem::path& directoryPath,
+	const std::string& textureFile,
+	ColorSpace colorSpace,
+	TextureRegistry* textureRegistry,
+	const glm::vec3& fallback
+)
 {
-	const Texture* texture = GetTexture(directoryPath, textureFile, textureRegistry);
-	if (!texture) return textureRegistry->CreatePixelTexture(fallback);
+	const Texture* texture = GetTexture(directoryPath, textureFile, colorSpace, textureRegistry);
+	if (!texture) return textureRegistry->RegisterPixelTexture(fallback);
 	return  texture;
 }
 
 
-const Texture* MaterialRegistry::GetTexture(const std::filesystem::path& directoryPath, const std::string& textureFile, TextureRegistry* textureRegistry)
+const Texture* MaterialRegistry::GetTexture
+(
+	const std::filesystem::path& directoryPath,
+	const std::string& textureFile,
+	ColorSpace colorSpace,
+	TextureRegistry* textureRegistry
+)
 {
 	if (textureFile.empty()) return nullptr;
 	std::filesystem::path texturePath = directoryPath / textureFile;
@@ -106,15 +116,15 @@ const Texture* MaterialRegistry::GetTexture(const std::filesystem::path& directo
 		const Texture* texture = nullptr;
 		if (is_regular_file(texturePath))
 		{
-			std::unique_ptr<GLImage> image = GLImage::LoadImage(texturePath);
+			std::unique_ptr<GLImage> image = GLImage::LoadImage(texturePath, colorSpace);
 			if (!image) return nullptr;
-			texture = textureRegistry->CreateTexture(*image, texturePath.stem().string());
+			texture = textureRegistry->RegisterImageTexture(*image, texturePath.stem().string());
 		}
 		else if (is_directory(texturePath))
 		{
-			std::vector<std::unique_ptr<GLImage>> mips = GLImage::LoadMipChain(texturePath);
+			std::vector<std::unique_ptr<GLImage>> mips = GLImage::LoadMipChain(texturePath, colorSpace);
 			if (mips.empty()) return nullptr;
-			texture = textureRegistry->CreateMipChain(mips, texturePath.filename().string());
+			texture = textureRegistry->RegisterMipChain(mips, texturePath.filename().string());
 		}
 		if (texture) return texture;
 	}
@@ -130,16 +140,16 @@ const Texture* MaterialRegistry::GetRMATexture
 )
 {
 	const std::string& rmaTextureFile = GetCustomParameter(materialSource, std::string(MaterialKeys::MapRMA));
-	const Texture* texture = GetTexture(directoryPath, rmaTextureFile, textureRegistry);
+	const Texture* texture = GetTexture(directoryPath, rmaTextureFile, ColorSpace::Linear, textureRegistry);
 	if (texture) return texture;
 
 	std::filesystem::path roughPath = directoryPath / materialSource.roughness_texname;
 	std::filesystem::path metalPath = directoryPath / materialSource.metallic_texname;
 	std::filesystem::path aoPath = directoryPath / materialSource.ambient_texname;
 
-	std::unique_ptr<GLImage> roughImage = GLImage::LoadImage(roughPath, false);
-	std::unique_ptr<GLImage> metalImage = GLImage::LoadImage(metalPath, false);
-	std::unique_ptr<GLImage> aoImage = GLImage::LoadImage(aoPath, false);
+	std::unique_ptr<GLImage> roughImage = GLImage::LoadImage(roughPath, ColorSpace::Linear, false);
+	std::unique_ptr<GLImage> metalImage = GLImage::LoadImage(metalPath, ColorSpace::Linear, false);
+	std::unique_ptr<GLImage> aoImage = GLImage::LoadImage(aoPath, ColorSpace::Linear, false);
 
 	if (!roughImage) { spdlog::warn("Roughness texture missing: replaced with fallback."); }
 	if (!metalImage) { spdlog::warn("Metallic texture missing: replaced with fallback."); }
@@ -157,28 +167,41 @@ const Texture* MaterialRegistry::GetRMATexture
 	if (width == 0 || height == 0)
 	{
 		spdlog::warn("RMA generation failed: creating pixel fallback.");
-		return textureRegistry->CreatePixelTexture(rmaFallback);
+		return textureRegistry->RegisterPixelTexture(rmaFallback);
 	}
 
 	bool isValid = ValidateRMAMerge(roughImage, width, height, roughPath) && ValidateRMAMerge(metalImage, width, height, metalPath) && ValidateRMAMerge(aoImage, width, height, aoPath);
 
-	if (!isValid) return textureRegistry->CreatePixelTexture(rmaFallback);
+	if (!isValid) return textureRegistry->RegisterPixelTexture(rmaFallback);
 
 	std::unique_ptr<GLImage> rmaImage = GenerateRMAImage(width, height, roughImage.get(), metalImage.get(), aoImage.get(), rmaFallback);
-	if (!rmaImage) return textureRegistry->CreatePixelTexture(rmaFallback);
+	if (!rmaImage) return textureRegistry->RegisterPixelTexture(rmaFallback);
 
 	std::string textureName = directoryPath.filename().string() + "_RMA";
-	return textureRegistry->CreateTexture(*rmaImage, textureName);
+	return textureRegistry->RegisterImageTexture(*rmaImage, textureName);
 }
 
-bool MaterialRegistry::ValidateRMAMerge(const std::unique_ptr<GLImage>& image, uint32_t expectedWidth, uint32_t expectedHeight, const std::filesystem::path& filePath)
+bool MaterialRegistry::ValidateRMAMerge(
+	const std::unique_ptr<GLImage>& image,
+	uint32_t expectedWidth,
+	uint32_t expectedHeight,
+	const std::filesystem::path& filePath
+)
 {
-	if (!image) return true;
+	if (!image)
+		return true;
 
-	if (image->InternalFormat != GL_R32F || image->ExternalFormat != GL_RED || image->DataType != GL_FLOAT)
+	switch (image->Format)
 	{
-		spdlog::error("RMA generation failed: '{}' is not single-channel float (GL_R32F).", filePath.string());
-		return false;
+		case ImageFormat::F32_R:
+		case ImageFormat::U8_R:
+		case ImageFormat::U16_R:
+		case ImageFormat::U32_R:
+			break;
+
+		default:
+			spdlog::error("RMA generation failed: '{}' is not single-channel image.", filePath.string());
+			return false;
 	}
 
 	if (image->Width != expectedWidth || image->Height != expectedHeight)
@@ -208,17 +231,13 @@ std::unique_ptr<GLImage> MaterialRegistry::GenerateRMAImage
 	}
 
 	float* rmaPixels = reinterpret_cast<float*>(FreeImage_GetBits(bitmap));
-
-	const float* roughPixels = roughImage ? reinterpret_cast<const float*>(FreeImage_GetBits(roughImage->Bitmap)) : nullptr;
-	const float* metalPixels = metalImage ? reinterpret_cast<const float*>(FreeImage_GetBits(metalImage->Bitmap)) : nullptr;
-	const float* aoPixels = aoImage ? reinterpret_cast<const float*>(FreeImage_GetBits(aoImage->Bitmap)) : nullptr;
-
 	const size_t pixelCount = static_cast<size_t>(width) * height;
+
 	for (size_t i = 0; i < pixelCount; ++i)
 	{
-		float rough = roughPixels ? roughPixels[i] : rmaFallback.r;
-		float metal = metalPixels ? metalPixels[i] : rmaFallback.g;
-		float ao = aoPixels ? aoPixels[i] : rmaFallback.b;
+		float rough = GetFloatPixel(roughImage, i, rmaFallback.r);
+		float metal = GetFloatPixel(metalImage, i, rmaFallback.g);
+		float ao = GetFloatPixel(aoImage, i, rmaFallback.b);
 
 		rmaPixels[i * 3 + 0] = rough;
 		rmaPixels[i * 3 + 1] = metal;
@@ -231,8 +250,40 @@ std::unique_ptr<GLImage> MaterialRegistry::GenerateRMAImage
 		height,
 		GL_FLOAT,
 		GL_RGB32F,
-		GL_RGB
+		GL_RGB,
+		ImageFormat::F32_RGB
 	);
 }
+
+float MaterialRegistry::GetFloatPixel(const GLImage* image, size_t i, float fallback)
+{
+	if (!image) return fallback;
+
+	switch (image->Format)
+	{
+		case ImageFormat::F32_R:
+		{
+			const float* data = reinterpret_cast<const float*>(FreeImage_GetBits(image->Bitmap));
+			return data[i];
+		}
+		case ImageFormat::U8_R:
+		{
+			const uint8_t* data = reinterpret_cast<const uint8_t*>(FreeImage_GetBits(image->Bitmap));
+			return static_cast<float>(data[i]) / static_cast<float>(std::numeric_limits<uint8_t>::max());
+		}
+		case ImageFormat::U16_R:
+		{
+			const uint16_t* data = reinterpret_cast<const uint16_t*>(FreeImage_GetBits(image->Bitmap));
+			return static_cast<float>(data[i]) / static_cast<float>(std::numeric_limits<uint16_t>::max());
+		}
+		case ImageFormat::U32_R:
+		{
+			const uint32_t* data = reinterpret_cast<const uint32_t*>(FreeImage_GetBits(image->Bitmap));
+			return static_cast<float>(data[i]) / static_cast<float>(std::numeric_limits<uint32_t>::max());
+		}
+		default:
+			return fallback;
+	}
+};
 
 

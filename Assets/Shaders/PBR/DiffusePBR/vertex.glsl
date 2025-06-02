@@ -1,5 +1,4 @@
 #version 460 core
-#extension GL_ARB_bindless_texture : require
 
 layout(location = 0) in vec3 localPosition;
 layout(location = 1) in vec3 localNormal;
@@ -24,8 +23,7 @@ void main(void)
     vec4 worldPositionH = modelMatrix * vec4(localPosition, 1.f);
     worldPosition = worldPositionH.xyz / worldPositionH.w;
     worldNormal = normalize(normalMatrix * localNormal);
-    worldTangent = vec4(normalize(normalMatrix * localTangent.xyz), localTangent.w);
-
+    worldTangent = vec4(normalize((modelMatrix * vec4(localTangent.xyz, 0)).xyz), localTangent.w);
     fragTexCoords = texCoords;
     fragMaterialIndex = materialIndex;
 }

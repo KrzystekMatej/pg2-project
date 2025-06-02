@@ -1,4 +1,4 @@
-#include <glad/gl.h>
+#include <glad/glad.h>
 #include "Renderer/Material/Shaders/ShaderProgram.h"
 #include <spdlog/spdlog.h>
 
@@ -17,7 +17,7 @@ ShaderProgram& ShaderProgram::operator=(ShaderProgram&& other) noexcept
 {
 	if (this != &other)
 	{
-		glDeleteProgram(m_Id);
+		if (m_Id) glDeleteProgram(m_Id);
 		m_Id = other.m_Id;
 		m_UniformLocationCache = std::move(other.m_UniformLocationCache);
 		other.m_Id = 0;
@@ -89,41 +89,66 @@ int ShaderProgram::GetUniformLocation(const std::string& name) const
 	return location;
 }
 
-void ShaderProgram::SetUniform(UniformType uniformType, const std::string& name, const void* value) const
+void ShaderProgram::SetInt32(const std::string& name, int value) const
+{
+	int location = GetUniformLocation(name);
+	if (location != -1) glUniform1i(location, value);
+}
+
+void ShaderProgram::SetUInt32(const std::string& name, unsigned int value) const
+{
+	int location = GetUniformLocation(name);
+	if (location != -1) glUniform1ui(location, value);
+}
+
+void ShaderProgram::SetFloat(const std::string& name, float value) const
+{
+	int location = GetUniformLocation(name);
+	if (location != -1) glUniform1f(location, value);
+}
+
+void ShaderProgram::SetVec2(const std::string& name, const float* vec2) const
+{
+	int location = GetUniformLocation(name);
+	if (location != -1) glUniform2fv(location, 1, vec2);
+}
+
+void ShaderProgram::SetVec3(const std::string& name, const float* vec3) const
+{
+	int location = GetUniformLocation(name);
+	if (location != -1) glUniform3fv(location, 1, vec3);
+}
+
+void ShaderProgram::SetVec4(const std::string& name, const float* vec4) const
+{
+	int location = GetUniformLocation(name);
+	if (location != -1) glUniform4fv(location, 1, vec4);
+}
+
+void ShaderProgram::SetMatrix3x3(const std::string& name, const float* mat3) const
+{
+	int location = GetUniformLocation(name);
+	if (location != -1) glUniformMatrix3fv(location, 1, GL_FALSE, mat3);
+}
+
+void ShaderProgram::SetMatrix4x4(const std::string& name, const float* mat4) const
+{
+	int location = GetUniformLocation(name);
+	if (location != -1) glUniformMatrix4fv(location, 1, GL_FALSE, mat4);
+}
+
+void ShaderProgram::SetTextureSampler(const std::string& name, const Texture& texture) const
 {
 	int location = GetUniformLocation(name);
 	if (location == -1) return;
+	
+	//glUniformHandleui64ARB(location, texture.GetBindlessHandle());
 
-	switch (uniformType)
-	{
-	case UniformType::Int32:
-		glUniform1i(location, *static_cast<const GLint*>(value));
-		break;
-	case UniformType::UInt32:
-		glUniform1ui(location, *static_cast<const GLuint*>(value));
-		break;
-	case UniformType::Float:
-		glUniform1f(location, *static_cast<const GLfloat*>(value));
-		break;
-	case UniformType::Vec2:
-		glUniform2fv(location, 1, static_cast<const GLfloat*>(value));
-		break;
-	case UniformType::Vec3:
-		glUniform3fv(location, 1, static_cast<const GLfloat*>(value));
-		break;
-	case UniformType::Vec4:
-		glUniform4fv(location, 1, static_cast<const GLfloat*>(value));
-		break;
-	case UniformType::Matrix3x3:
-		glUniformMatrix3fv(location, 1, GL_FALSE, static_cast<const GLfloat*>(value));
-		break;
-	case UniformType::Matrix4x4:
-		glUniformMatrix4fv(location, 1, GL_FALSE, static_cast<const GLfloat*>(value));
-		break;
-	default:
-		spdlog::error("Unknown uniform type passed to SetUniform()");
-		break;
-	}
+	GLuint64 handle = texture.GetBindlessHandle();
+	GLuint low = static_cast<GLuint>(handle & 0xFFFFFFFF);
+	GLuint high = static_cast<GLuint>(handle >> 32);
+
+	glUniform2ui(location, low, high);
 }
 
 bool ShaderProgram::CheckLinking() const

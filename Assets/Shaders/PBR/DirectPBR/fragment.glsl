@@ -26,7 +26,7 @@ uniform vec3 cameraPosition;
 
 struct Material
 {
-    uint64_t textures[MapCount];
+    uvec2 textures[MapCount];
 };
 
 layout(std430, binding = MATERIAL_BUFFER_ID) buffer MaterialBuffer
@@ -46,8 +46,9 @@ uniform uint lightCount;
 
 const float PI = 3.14159265359;
 
-float DistributionGGX(vec3 N, vec3 H, float a)
+float DistributionGGX(vec3 N, vec3 H, float roughness)
 {
+    float a = roughness * roughness;
     float a2 = a * a;
     float NdotH = max(dot(N, H), 0.0);
     float NdotH2 = NdotH * NdotH;
@@ -59,51 +60,54 @@ float DistributionGGX(vec3 N, vec3 H, float a)
     return nom / denom;
 }
 
-float GeometrySchlickGGX(float NdotV, float k)
+float GeometrySchlickGGX(float NdotV, float roughness)
 {
+    float r = (roughness + 1.0);
+    float k = (r * r) / 8.0;
+
     float nom = NdotV;
     float denom = NdotV * (1.0 - k) + k;
 
     return nom / denom;
 }
 
-float GeometrySmith(vec3 N, vec3 V, vec3 L, float k)
+float GeometrySmith(vec3 N, vec3 V, vec3 L, float roughness)
 {
     float NdotV = max(dot(N, V), 0.0);
     float NdotL = max(dot(N, L), 0.0);
-    float ggx1 = GeometrySchlickGGX(NdotV, k);
-    float ggx2 = GeometrySchlickGGX(NdotL, k);
+    float ggx2 = GeometrySchlickGGX(NdotV, roughness);
+    float ggx1 = GeometrySchlickGGX(NdotL, roughness);
 
     return ggx1 * ggx2;
 }
 
 vec3 FresnelSchlick(float cosTheta, vec3 F0)
 {
-    return F0 + (1.0 - F0) * pow(1.0 - cosTheta, 5.0);
+    return F0 + (1.0 - F0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
+}
+
+vec3 GetNormal(Material material)
+{
+    vec3 T = normalize(worldTangent.xyz);
+    vec3 N = normalize(worldNormal);
+    T = normalize(T - dot(T, N) * N);
+    vec3 B = cross(N, T) * worldTangent.w;
+    mat3 TBN = mat3(T, B, N);
+    vec3 normalTangent = texture(sampler2D(material.textures[MapNormal]), fragTexCoords).rgb;
+    normalTangent = normalize(normalTangent * 2.0 - 1.0);
+    N = normalize(TBN * normalTangent);
+    return N;
 }
 
 void main()
 {
     Material material = materials[fragMaterialIndex];
 
-    vec3 T = normalize(worldTangent.xyz);
-    vec3 N = normalize(worldNormal);
-    T = normalize(T - dot(T, N) * N);
-    vec3 B = cross(N, T) * worldTangent.w;
-    mat3 TBN = mat3(T, B, N);
-    sampler2D normalMap = sampler2D(material.textures[MapNormal]);
-
-    vec3 normalTangent = texture(normalMap, fragTexCoords).rgb;
-    normalTangent = normalize(normalTangent * 2.0 - 1.0);
-    N = normalize(TBN * normalTangent);
-
+    vec3 N = GetNormal(material);
     vec3 V = normalize(cameraPosition - worldPosition);
 
-    sampler2D diffuseMap = sampler2D(material.textures[MapDiffuse]);
-    sampler2D rmaMap = sampler2D(material.textures[MapRMA]);
-
-    vec3 albedo = pow(texture(diffuseMap, fragTexCoords).rgb, vec3(2.2));
-    vec3 rma = texture(rmaMap, fragTexCoords).rgb;
+    vec3 albedo = texture(sampler2D(material.textures[MapDiffuse]), fragTexCoords).rgb;
+    vec3 rma = texture(sampler2D(material.textures[MapRMA]), fragTexCoords).rgb;
 
     float roughness = rma.r;
     float metallic = rma.g;
@@ -113,7 +117,7 @@ void main()
     F0 = mix(F0, albedo, metallic);
 
     vec3 Lo = vec3(0.0);
-    for (int i = 0; i < lightCount; ++i)
+    for (int i = 0; i < lightCount; i++)
     {
         vec3 L = normalize(lights[i].position - worldPosition);
         vec3 H = normalize(V + L);
@@ -125,13 +129,13 @@ void main()
         float G = GeometrySmith(N, V, L, roughness);
         vec3 F = FresnelSchlick(max(dot(H, V), 0.0), F0);
 
-        vec3 kS = F;
-        vec3 kD = vec3(1.0) - kS;
-        kD *= 1.0 - metallic;
-
         vec3 numerator = NDF * G * F;
         float denominator = 4.0 * max(dot(N, V), 0.0) * max(dot(N, L), 0.0) + 0.0001;
         vec3 specular = numerator / denominator;
+
+        vec3 kS = F;
+        vec3 kD = vec3(1.0) - kS;
+        kD *= 1.0 - metallic;
 
         float NdotL = max(dot(N, L), 0.0);
         Lo += (kD * albedo / PI + specular) * radiance * NdotL;

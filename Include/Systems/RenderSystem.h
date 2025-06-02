@@ -3,10 +3,14 @@
 #include "Renderer/Renderer.h"
 #include "Scene/Scene.h"
 #include "Renderer/Buffers/ShaderStorageBuffer.h"
+#include "Assets/TextureRegistry.h"
 
 class RenderSystem
 {
 public:
-	void Initialize(const AssetManager& assetManager) const;
-    void Draw(Scene& scene, float aspectRatio) const;
+	void Initialize(const AssetManager& assetManager);
+    void Draw(Scene& scene, float aspectRatio);
+private:
+	const Texture* m_BackgroundTexture;
+	const ShaderProgram* m_BackgroundShader;
 };

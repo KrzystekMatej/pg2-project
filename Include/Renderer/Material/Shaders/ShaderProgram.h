@@ -2,31 +2,17 @@
 #include <string>
 #include <unordered_map>
 #include "Shader.h"
-
-enum class UniformType
-{
-	Matrix4x4,
-	Matrix3x3,
-	Vec2,
-	Vec3,
-	Vec4,
-	Float,
-	Int32,
-	UInt32
-};
-
+#include "Renderer/Material/Texture.h"
+#include "Config.h"
 
 class ShaderProgram
 {
 public:
 	ShaderProgram();
-
 	ShaderProgram(const ShaderProgram&) = delete;
 	ShaderProgram& operator=(const ShaderProgram&) = delete;
-
 	ShaderProgram(ShaderProgram&& other) noexcept;
 	ShaderProgram& operator=(ShaderProgram&& other) noexcept;
-
 	~ShaderProgram();
 
 	void AttachShader(const Shader& shader) const;
@@ -34,8 +20,18 @@ public:
 	bool Link() const;
 	void Use() const;
 	void Unbind() const;
+
 	int GetUniformLocation(const std::string& name) const;
-	void SetUniform(UniformType uniformType, const std::string& name, const void* value) const;
+
+	void SetInt32(const std::string& name, int value) const;
+	void SetUInt32(const std::string& name, unsigned int value) const;
+	void SetFloat(const std::string& name, float value) const;
+	void SetVec2(const std::string& name, const float* vec2) const;
+	void SetVec3(const std::string& name, const float* vec3) const;
+	void SetVec4(const std::string& name, const float* vec4) const;
+	void SetMatrix3x3(const std::string& name, const float* mat3) const;
+	void SetMatrix4x4(const std::string& name, const float* mat4) const;
+	void SetTextureSampler(const std::string& name, const Texture& texture) const;
 private:
 	bool CheckLinking() const;
 	void Validate() const;

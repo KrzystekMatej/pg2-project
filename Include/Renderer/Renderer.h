@@ -1,16 +1,21 @@
 #pragma once
 #include <glm/glm.hpp>
-#include "Buffers/Mesh/VertexArray.h"
-#include "Buffers/Mesh/IndexBuffer.h"
-#include "Material/Shaders/ShaderProgram.h"
+#include <filesystem>
+#include "Renderer/Buffers/Mesh/VertexArray.h"
+#include "Renderer/Buffers/Mesh/IndexBuffer.h"
+#include "Renderer/Material/Shaders/ShaderProgram.h"
+#include "ECS/Components/Transform.h"
+#include "ECS/Components/PointLight.h"
+#include "ECS/Components/Material.h"
+#include "ECS/Components/Mesh.h"
+#include "DrawContext.h"
+#include "Assets/TextureRegistry.h"
+#include "Assets/ShaderRegistry.h"
 
 class Renderer
 {
 public:
-	Renderer(uint32_t renderMode)
-		: m_RenderMode(renderMode) {}
-
-	void Draw(const ShaderProgram* shaderProgram, const VertexArray& vertexArray, const IndexBuffer& indexBuffer, const glm::mat4& pv, const glm::mat4& model, const glm::mat3& normal) const;
-private:
-	uint32_t m_RenderMode;
+	static void DrawPass(entt::registry& registry, const DrawContext& drawCtx);
+	static void DiffuseBackgroundPass(const ShaderProgram& backgroundShader, const Texture& backgroundTexture, const glm::mat4 projection, const glm::mat4& view);
+	static const Texture* IrradianceMapPass(std::filesystem::path directoryPath, TextureRegistry* textureRegistry, ShaderRegistry* shaderRegistry, const Project& project);
 };

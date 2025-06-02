@@ -1,4 +1,4 @@
-#include <glad/gl.h>
+#include <glad/glad.h>
 #include "Assets/ShaderRegistry.h"
 #include <spdlog/spdlog.h>
 #include <filesystem>

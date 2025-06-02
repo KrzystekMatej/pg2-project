@@ -10,7 +10,6 @@ class SceneLoader
 {
 public:
 	static void Load(Scene* scene, const std::filesystem::path& filePath, const Project& project, const Window* window, const AssetManager& assetManager);
-	static void LoadObj(Scene* scene, const std::vector<ShaderPipeline>& pipelines, const std::filesystem::path& filePath, const AssetManager& assetManager);
-
 private:
+	static void CreateTestSpheres(Scene* scene, const Project& project, const Window* window, const AssetManager& assetManager);
 };

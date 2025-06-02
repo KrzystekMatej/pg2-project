@@ -1,5 +1,5 @@
+#include <glad/glad.h>
 #include "Renderer/Buffers/Mesh/IndexBuffer.h"
-#include <glad/gl.h>
 
 IndexBuffer::IndexBuffer(const void* data, uint32_t count) : m_Count(count)
 {
@@ -19,7 +19,7 @@ IndexBuffer& IndexBuffer::operator=(IndexBuffer&& other) noexcept
 {
     if (this != &other)
     {
-        glDeleteBuffers(1, &m_Id);
+        if (m_Id) glDeleteBuffers(1, &m_Id);
         m_Id = other.m_Id;
         m_Count = other.m_Count;
         other.m_Id = 0;

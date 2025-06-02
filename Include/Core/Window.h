@@ -21,6 +21,7 @@ public:
     bool IsOpen() const { return !glfwWindowShouldClose(m_Window); }
     void SwapBuffers() const { glfwSwapBuffers(m_Window); }
     void Clear() const;
+    void SetViewport() const;
 
     glm::vec2 GetCursorPosition() const;
     void SetCursorPosition(int x, int y) const { glfwSetCursorPos(m_Window, x, y); }

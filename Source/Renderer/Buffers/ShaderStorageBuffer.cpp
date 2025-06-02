@@ -1,4 +1,4 @@
-#include <glad/gl.h>
+#include <glad/glad.h>
 #include "Renderer/Buffers/ShaderStorageBuffer.h"
 #include <spdlog/spdlog.h>
 

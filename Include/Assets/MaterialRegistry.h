@@ -63,10 +63,28 @@ public:
 		TextureRegistry* textureRegistry
 	);
 private:
-	static MaterialAsset LoadMaterial(const tinyobj::material_t& materialSource, const std::string& materialName, const std::filesystem::path& directoryPath, TextureRegistry* textureRegistry);
+	static MaterialAsset LoadMaterial
+	(
+		const tinyobj::material_t& materialSource,
+		const std::string& materialName,
+		const std::filesystem::path& directoryPath,
+		TextureRegistry* textureRegistry
+	);
 	static const std::string& GetCustomParameter(const tinyobj::material_t& materialSource, const std::string& key);
-	static const Texture* GetTexture(const std::filesystem::path& directoryPath, const std::string& textureFile, TextureRegistry* textureRegistry);
-	static const Texture* GetTextureOrPixel(const std::filesystem::path& directoryPath, const std::string& textureFile, TextureRegistry* textureRegistry, const glm::vec3& fallback);
+	static const Texture* GetTexture
+	(
+		const std::filesystem::path& directoryPath,
+		const std::string& textureFile,
+		ColorSpace colorSpace,
+		TextureRegistry* textureRegistry
+	);
+	static const Texture* GetTextureOrPixel(
+		const std::filesystem::path& directoryPath,
+		const std::string& textureFile,
+		ColorSpace colorSpace,
+		TextureRegistry* textureRegistry,
+		const glm::vec3& fallback
+	);
 	static const Texture* GetRMATexture
 	(
 		const tinyobj::material_t& materialSource,
@@ -84,6 +102,7 @@ private:
 		const GLImage* aoImage,
 		glm::vec3 rmaFallback
 	);
+	static float GetFloatPixel(const GLImage* image, size_t i, float fallback);
 
 
 	ShaderStorageBuffer m_Buffer;

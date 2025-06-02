@@ -1,5 +1,4 @@
 #include "Systems/RenderSystem.h"
-#include "Renderer/RenderContext.h"
 
 #include <glm/gtc/type_ptr.hpp>
 
@@ -9,20 +8,22 @@
 #include "ECS/Components/Transform.h"
 #include "ECS/Components/Camera.h"
 #include "ECS/Components/PointLight.h"
+#include "Renderer/DrawContext.h"
 
-void RenderSystem::Initialize(const AssetManager& assetManager) const
+void RenderSystem::Initialize(const AssetManager& assetManager)
 {
     const ShaderStorageBuffer* materialBuffer = assetManager.GetRegistry<MaterialRegistry>()->GetMaterialBuffer();
     materialBuffer->BindBase();
+    m_BackgroundTexture = assetManager.GetRegistry<TextureRegistry>()->GetAsset("background");
+    m_BackgroundShader = assetManager.GetRegistry<ShaderRegistry>()->GetAsset("background");
 }
 
-void RenderSystem::Draw(Scene& scene, float aspectRatio) const
+void RenderSystem::Draw(Scene& scene, float aspectRatio)
 {
     entt::registry& registry = scene.GetRegistry();
-    auto group = registry.group<Transform, Material, Mesh>();
     auto [cameraTransform, camera] = registry.get<Transform, Camera>(scene.GetActiveCameraHandle());
 
-    RenderContext ctx
+    DrawContext ctx
     {
         .Projection = camera.GetProjectionMatrix(aspectRatio),
         .View = cameraTransform.GetViewMatrix(),
@@ -30,12 +31,6 @@ void RenderSystem::Draw(Scene& scene, float aspectRatio) const
         .LightView = registry.view<Transform, PointLight>()
     };
 
-    for (auto&& [entity, transform, material, geometry] : group.each())
-    {
-        for (const ShaderPipeline& pipeline : material.pipelines)
-        {
-            pipeline.Activate(ctx, transform, *geometry.mesh);
-        }
-        glDrawElements(GL_TRIANGLES, geometry.mesh->GetIndexBuffer().GetCount(), GL_UNSIGNED_INT, nullptr);
-    }
+    Renderer::DrawPass(registry, ctx);
+    if (m_BackgroundShader && m_BackgroundTexture) Renderer::DiffuseBackgroundPass(*m_BackgroundShader, *m_BackgroundTexture, ctx.Projection, ctx.View);
 }

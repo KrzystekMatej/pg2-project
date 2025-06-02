@@ -1,10 +1,11 @@
 #pragma once
-#include "ECS/Components/PointLight.h"
-#include "ECS/Components/Transform.h"
+#include <glm/glm.hpp>
 #include <entt/entt.hpp>
-#include <utility>
+#include "ECS/Components/Transform.h"
+#include "ECS/Components/PointLight.h"
 
-struct RenderContext 
+
+struct DrawContext
 {
     glm::mat4 Projection;
     glm::mat4 View;

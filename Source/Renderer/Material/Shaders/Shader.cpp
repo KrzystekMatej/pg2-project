@@ -1,4 +1,4 @@
-#include <glad/gl.h>
+#include <glad/glad.h>
 #include "Renderer/Material/Shaders/Shader.h"
 #include <spdlog/spdlog.h>
 #include <fstream>
@@ -8,6 +8,27 @@ Shader::Shader(uint32_t shaderType)
     : m_ShaderType(shaderType)
 {
     m_Id = glCreateShader(shaderType);
+}
+
+Shader::Shader(Shader&& other) noexcept
+    : m_ShaderType(other.m_ShaderType), m_Id(other.m_Id), m_Source(std::move(other.m_Source))
+{
+    other.m_Id = 0;
+}
+
+Shader& Shader::operator=(Shader&& other) noexcept
+{
+    if (this != &other)
+    {
+        if (m_Id) glDeleteShader(m_Id);
+
+        m_ShaderType = other.m_ShaderType;
+        m_Id = other.m_Id;
+        m_Source = std::move(other.m_Source);
+
+        other.m_Id = 0;
+    }
+    return *this;
 }
 
 Shader::~Shader()
@@ -68,12 +89,12 @@ bool Shader::CheckCompilation() const
     return true;
 }
 
-void Shader::Attach(uint32_t shaderProgram) const
+void Shader::Attach(uint32_t programId) const
 {
-    glAttachShader(shaderProgram, m_Id);
+    glAttachShader(programId, m_Id);
 }
 
-void Shader::Detach(uint32_t shaderProgram) const
+void Shader::Detach(uint32_t programId) const
 {
-    glDetachShader(shaderProgram, m_Id);
+    glDetachShader(programId, m_Id);
 }

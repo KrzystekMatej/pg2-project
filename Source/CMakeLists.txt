@@ -10,7 +10,7 @@ target_include_directories(RayTracer PRIVATE ${CMAKE_SOURCE_DIR}/Include)
 find_package(glfw3 CONFIG REQUIRED)
 find_package(OpenGL REQUIRED)
 
-add_library(glad STATIC "${CMAKE_SOURCE_DIR}/External/glad/src/gl.c")
+add_library(glad STATIC "${CMAKE_SOURCE_DIR}/External/glad/src/glad.c")
 target_include_directories(glad PUBLIC "${CMAKE_SOURCE_DIR}/External/glad/include")
 
 find_package(freeimage CONFIG REQUIRED)

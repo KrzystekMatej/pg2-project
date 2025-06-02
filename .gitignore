@@ -1,8 +1,12 @@
 Build/
 .vs/
+
 External/oidn/
 External/*.zip
-Assets/Meshes/
+
+Assets/*
+!Assets/Shaders/
+!Assets/Shaders/**
 
 CMakeCache.txt
 CMakeFiles/

@@ -66,7 +66,7 @@ struct GLImage
 		if (Bitmap) FreeImage_Unload(Bitmap);
 	}
 
-	static std::unique_ptr<GLImage> LoadImage(const std::filesystem::path& filePath, ColorSpace colorSpace = ColorSpace::Linear, bool logError = true);
+	static std::unique_ptr<GLImage> LoadImage(const std::filesystem::path& filePath, ColorSpace colorSpace = ColorSpace::Linear, bool verticalFlip = true, bool logError = true);
 	static std::vector<std::unique_ptr<GLImage>> LoadMipChain(const std::filesystem::path& directoryPath, ColorSpace colorSpace);
 
 	FIBITMAP* Bitmap;

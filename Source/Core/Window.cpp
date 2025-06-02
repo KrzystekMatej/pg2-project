@@ -66,7 +66,7 @@ bool Window::MakeContext(int interval) const
 
 void Window::InitializeGL() const
 {
-    glClipControl(GL_UPPER_LEFT, GL_NEGATIVE_ONE_TO_ONE);
+    //glClipControl(GL_UPPER_LEFT, GL_NEGATIVE_ONE_TO_ONE);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_STENCIL_TEST);
     glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);

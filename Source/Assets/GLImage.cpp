@@ -3,7 +3,7 @@
 #include <string>
 #include <spdlog/spdlog.h>
 
-std::unique_ptr<GLImage> GLImage::LoadImage(const std::filesystem::path& filePath, ColorSpace colorSpace, bool logError)
+std::unique_ptr<GLImage> GLImage::LoadImage(const std::filesystem::path& filePath, ColorSpace colorSpace, bool verticalFlip, bool logError)
 {
 	std::string filePathStr = filePath.string();
 
@@ -28,7 +28,7 @@ std::unique_ptr<GLImage> GLImage::LoadImage(const std::filesystem::path& filePat
 		return nullptr;
 	}
 
-	FreeImage_FlipVertical(bitmap);
+	if (verticalFlip) FreeImage_FlipVertical(bitmap);
 
 	const FREE_IMAGE_TYPE imageType = FreeImage_GetImageType(bitmap);
 	uint32_t width = FreeImage_GetWidth(bitmap);

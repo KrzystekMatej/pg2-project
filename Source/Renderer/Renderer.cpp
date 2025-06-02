@@ -4,8 +4,13 @@
 #include "Assets/TextureFactory.h"
 #include <glm/gtc/type_ptr.hpp>
 
-int PrepareCube(VertexArray& vertexArray)
+std::unique_ptr<VertexArray> cubeArray = nullptr;
+uint32_t vertexCount = 0;
+
+void PrepareCube()
 {
+    cubeArray = std::make_unique<VertexArray>();
+
     float vertices[] =
     {
         // back face
@@ -52,20 +57,20 @@ int PrepareCube(VertexArray& vertexArray)
          -1.0f,  1.0f,  1.0f,  0.0f,  1.0f,  0.0f, 0.0f, 0.0f  // bottom-left        
     };
 
-    VertexBuffer vertexBuffer(vertices, sizeof(vertices));
+    VertexBuffer cubeBuffer(vertices, sizeof(vertices));
 
-    vertexBuffer.Bind();
-    vertexArray.Bind();
+    cubeBuffer.Bind();
+    cubeArray->Bind();
 
     VertexBufferLayout layout;
     layout.Push<float>(3);
     layout.Push<float>(3);
     layout.Push<float>(2);
 
-    vertexArray.AddBuffer(std::move(vertexBuffer), layout);
-    vertexArray.Unbind();
+    cubeArray->AddBuffer(std::move(cubeBuffer), layout);
+    cubeArray->Unbind();
 
-    return sizeof(vertices) / (sizeof(float) * 8);
+    vertexCount = sizeof(vertices) / (sizeof(float) * 8);
 }
 
 void Renderer::DrawPass(entt::registry& registry, const DrawContext& drawCtx)
@@ -86,15 +91,14 @@ void Renderer::DrawPass(entt::registry& registry, const DrawContext& drawCtx)
 void Renderer::DiffuseBackgroundPass(const ShaderProgram& backgroundShader, const Texture& backgroundTexture, const glm::mat4 projection, const glm::mat4& view)
 {
     glDepthFunc(GL_LEQUAL);
-    VertexArray cubeArray;
-    int vertexCount = PrepareCube(cubeArray);
+    if (!cubeArray) PrepareCube();
     backgroundShader.Use();
     backgroundShader.SetInt32("environmentMap", 0);
     Texture::Activate(0);
     backgroundTexture.Bind();
     backgroundShader.SetMatrix4x4("projection", glm::value_ptr(projection));
     backgroundShader.SetMatrix4x4("view", glm::value_ptr(view));
-    cubeArray.Bind();
+    cubeArray->Bind();
     glDrawArrays(GL_TRIANGLES, 0, vertexCount);
 }
 
@@ -111,8 +115,8 @@ const Texture* Renderer::IrradianceMapPass(std::filesystem::path directoryPath, 
     renderBuffer.Storage(GL_DEPTH_COMPONENT24, cubeMapSize, cubeMapSize);
     frameBuffer.AttachRenderBuffer(GL_DEPTH_ATTACHMENT, renderBuffer);
 
-    std::unique_ptr<GLImage> envImage = GLImage::LoadImage(directoryPath / "env.hdr", ColorSpace::Linear);
-    std::unique_ptr<Texture> equirectangularMap = TextureFactory::CreateFromImage(*envImage, false);
+    std::unique_ptr<GLImage> envImage = GLImage::LoadImage(directoryPath / "env.hdr", ColorSpace::Linear, false);
+    std::unique_ptr<Texture> equirectangularMap = TextureFactory::CreateFromImage(*envImage, true);
     
     const Texture* cubeMap = textureRegistry->AddAsset
     (
@@ -124,22 +128,21 @@ const Texture* Renderer::IrradianceMapPass(std::filesystem::path directoryPath, 
     glm::mat4 captureProjection = glm::perspective(glm::radians(90.0f), 1.0f, 0.1f, 10.0f);
     glm::mat4 captureViews[] =
     {
-       glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f,  0.0f,  0.0f), glm::vec3(0.0f, -1.0f,  0.0f)),
-       glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(-1.0f,  0.0f,  0.0f), glm::vec3(0.0f, -1.0f,  0.0f)),
-       glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f,  1.0f,  0.0f), glm::vec3(0.0f,  0.0f,  1.0f)),
-       glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f,  0.0f), glm::vec3(0.0f,  0.0f, -1.0f)),
-       glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f,  0.0f,  1.0f), glm::vec3(0.0f, -1.0f,  0.0f)),
-       glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f,  0.0f, -1.0f), glm::vec3(0.0f, -1.0f,  0.0f))
+        glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f,  0.0f,  0.0f), glm::vec3(0.0f, -1.0f,  0.0f)),
+        glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(-1.0f,  0.0f,  0.0f), glm::vec3(0.0f, -1.0f,  0.0f)),
+        glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f,  1.0f,  0.0f), glm::vec3(0.0f,  0.0f,  1.0f)),
+        glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f,  0.0f), glm::vec3(0.0f,  0.0f, -1.0f)),
+        glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f,  0.0f,  1.0f), glm::vec3(0.0f, -1.0f,  0.0f)),
+        glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f,  0.0f, -1.0f), glm::vec3(0.0f, -1.0f,  0.0f))
     };
-
-    VertexArray cubeArray;
-    int vertexCount = PrepareCube(cubeArray);
 
     const ShaderProgram* convertProgram = shaderRegistry->LoadShaderProgram
     (
         project.GetShaderDirectory() / "IBL" / "EquirectangularToCubeMap",
         "EquirectangularToCubeMap"
     );
+
+    if (!cubeArray) PrepareCube();
 
     convertProgram->Use();
     convertProgram->SetInt32("equirectangularMap", 0);
@@ -149,15 +152,15 @@ const Texture* Renderer::IrradianceMapPass(std::filesystem::path directoryPath, 
 
     glViewport(0, 0, cubeMapSize, cubeMapSize);
     frameBuffer.Bind();
-    for (unsigned int i = 0; i < 6; ++i)
+    for (uint32_t i = 0; i < 6; i++)
     {
-        cubeArray.Bind();
+        cubeArray->Bind();
         convertProgram->SetMatrix4x4("view", glm::value_ptr(captureViews[i]));
         frameBuffer.AttachTexture(GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, cubeMap->GetId(), 0);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glDrawArrays(GL_TRIANGLES, 0, vertexCount);
     }
-    cubeArray.Unbind();
+    cubeArray->Unbind();
     frameBuffer.Unbind();
 
     constexpr uint32_t irradianceMapSize = 32;
@@ -180,17 +183,17 @@ const Texture* Renderer::IrradianceMapPass(std::filesystem::path directoryPath, 
 
     glViewport(0, 0, irradianceMapSize, irradianceMapSize);
     frameBuffer.Bind();
-    cubeArray.Bind();
+    cubeArray->Bind();
     Texture::Activate(0);
     cubeMap->Bind();
-    for (unsigned int i = 0; i < 6; ++i)
+    for (uint32_t i = 0; i < 6; i++)
     {
         convolutionProgram->SetMatrix4x4("view", glm::value_ptr(captureViews[i]));
         frameBuffer.AttachTexture(GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, irradianceMap->GetId(), 0);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glDrawArrays(GL_TRIANGLES, 0, vertexCount);
     }
-    cubeArray.Unbind();
+    cubeArray->Unbind();
     frameBuffer.Unbind();
 
     return irradianceMap;

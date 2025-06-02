@@ -68,11 +68,12 @@ void SceneLoader::CreateTestSpheres(Scene* scene, const Project& project, const 
 {
     const MeshHandle* mesh = assetManager.LoadObjFile(project.GetMeshDirectory() / "sphere/mesh.obj");
 
-    std::vector<ShaderPipeline> pipelines = CreateDirectPBRPipelines(mesh, project, assetManager);
+    std::vector<ShaderPipeline> pipelines = CreateDiffusePBRPipelines(mesh, project, assetManager);
 
 
     glm::vec3 lightPositions[] = { glm::vec3(0.0f, 0.0f, 10.0f) };
     glm::vec3 lightColors[] = { glm::vec3(150.0f, 150.0f, 150.0f) };
+
     int rows = 7;
     int columns = 7;
     float spacing = 2.5;

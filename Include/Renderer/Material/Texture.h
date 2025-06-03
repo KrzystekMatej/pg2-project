@@ -19,6 +19,7 @@ public:
 	void Unbind() const;
 	static void Activate(uint32_t index = 0);
 	uint64_t GetBindlessHandle() const { return m_Handle; }
+	void GenerateMipmaps() const;
 private:
 	friend TextureRegistry;
 	uint32_t m_Id = 0;

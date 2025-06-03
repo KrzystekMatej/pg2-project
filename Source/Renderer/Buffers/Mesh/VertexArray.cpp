@@ -33,20 +33,31 @@ VertexArray::~VertexArray()
 	}
 }
 
-void VertexArray::AddBuffer(VertexBuffer&& vertexBuffer, const VertexBufferLayout& layout)
+void VertexArray::AddBuffer(VertexBuffer&& vb, const VertexBufferLayout& layout)
 {
-	Bind();
-	vertexBuffer.Bind();
-	const auto& elements = layout.GetElements();
-	uint32_t offset = 0;
-	for (std::size_t i = 0; i < elements.size(); i++)
-	{
-		const VertexBufferElement& element = elements[i];
-		glEnableVertexAttribArray(i);
-		glVertexAttribPointer(i, element.count, element.type, element.normalized, layout.GetStride(), (const void*)offset);
-		offset += element.count * VertexBufferElement::GetSizeOfType(element.type);
-	}
-	m_VertexBuffers.push_back(std::move(vertexBuffer));
+    Bind();
+    vb.Bind();
+
+    const auto& elements = layout.GetElements();
+    uint32_t offset = 0;
+
+    for (GLuint i = 0; i < elements.size(); ++i)
+    {
+        const auto& e = elements[i];
+
+        if (e.type == GL_UNSIGNED_INT || e.type == GL_INT)
+        {
+            glVertexAttribIPointer(i, e.count, e.type, layout.GetStride(), reinterpret_cast<void*>(static_cast<uintptr_t>(offset)));
+        }
+        else
+        {
+            glVertexAttribPointer(i, e.count, e.type, e.normalized, layout.GetStride(), reinterpret_cast<void*>(static_cast<uintptr_t>(offset)));
+        }
+        glEnableVertexAttribArray(i);
+        offset += e.count * VertexBufferElement::GetSizeOfType(e.type);
+    }
+
+    m_VertexBuffers.push_back(std::move(vb));
 }
 
 void VertexArray::Bind() const

@@ -102,6 +102,14 @@ void MeshRegistry::BuildTriangles
 			triangle.vertices[v * 2 + 1] = Vertex{};
 		}
 
+		for (std::size_t v = 0; v < 3; ++v)
+		{
+			uint32_t idx = materialRange->Offset + meshSource.material_ids[face];
+
+			triangle.vertices[v * 2].MaterialIndex = idx;
+			triangle.vertices[v * 2 + 1].MaterialIndex = idx;
+		}
+
 		const glm::vec3& p0 = triangle.vertices[0].Position;
 		const glm::vec3& p1 = triangle.vertices[2].Position;
 		const glm::vec3& p2 = triangle.vertices[4].Position;

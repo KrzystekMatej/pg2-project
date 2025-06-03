@@ -29,3 +29,8 @@ void Texture::Activate(uint32_t index)
 {
     glActiveTexture(GL_TEXTURE0 + index);
 }
+
+void Texture::GenerateMipmaps() const
+{
+    glGenerateMipmap(m_Target);
+}

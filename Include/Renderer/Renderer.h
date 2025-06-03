@@ -17,5 +17,47 @@ class Renderer
 public:
 	static void DrawPass(entt::registry& registry, const DrawContext& drawCtx);
 	static void DiffuseBackgroundPass(const ShaderProgram& backgroundShader, const Texture& backgroundTexture, const glm::mat4 projection, const glm::mat4& view);
-	static const Texture* IrradianceMapPass(std::filesystem::path directoryPath, TextureRegistry* textureRegistry, ShaderRegistry* shaderRegistry, const Project& project);
+
+	static const Texture* CubeMapPass
+	(
+		std::filesystem::path envPath,
+		TextureRegistry* textureRegistry,
+		ShaderRegistry* shaderRegistry,
+		const Project& project,
+		uint32_t size
+	);
+
+	static const Texture* IrradianceMapPass
+	(
+		std::filesystem::path directoryPath,
+		TextureRegistry* textureRegistry,
+		ShaderRegistry* shaderRegistry,
+		const Project& project,
+		const Texture* cubeMap,
+		uint32_t size,
+		float sampleDelta
+	);
+
+	static const Texture* PrefilterMapPass
+	(
+		std::filesystem::path directoryPath,
+		TextureRegistry* textureRegistry,
+		ShaderRegistry* shaderRegistry,
+		const Project& project,
+		const Texture* cubeMap,
+		uint32_t size,
+		uint32_t maxMipLevels,
+		uint32_t sampleCount,
+		float resolution
+	);
+
+	static const Texture* BrdfTablePass
+	(
+		std::filesystem::path directoryPath,
+		TextureRegistry* textureRegistry,
+		ShaderRegistry* shaderRegistry,
+		const Project& project,
+		uint32_t size,
+		uint32_t sampleCount
+	);
 };

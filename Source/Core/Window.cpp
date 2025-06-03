@@ -72,6 +72,7 @@ void Window::InitializeGL() const
     glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
     glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
     glEnable(GL_MULTISAMPLE);
+    glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
 }
 
 void Window::Clear() const

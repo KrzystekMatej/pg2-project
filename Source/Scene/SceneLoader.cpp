@@ -9,6 +9,7 @@
 #include "Renderer/Material/Shaders/Binders/NormalBinder.h"
 #include "Renderer/Material/Shaders/Binders/DirectPBRBinder.h"
 #include "Renderer/Material/Shaders/Binders/DiffusePBRBinder.h"
+#include "Renderer/Material/Shaders/Binders/FullPBRBinder.h"
 #include "Renderer/Renderer.h"
 #include "Config.h"
 
@@ -19,7 +20,7 @@ void SceneLoader::Load(Scene* scene, const std::filesystem::path& filePath, cons
     CreateTestSpheres(scene, project, window, assetManager);
 }
 
-std::vector<ShaderPipeline> CreateDirectPBRPipelines(const MeshHandle* mesh, const Project& project, const AssetManager& assetManager)
+std::vector<ShaderPipeline> CreateDirectPBRPipelines(const Project& project, const AssetManager& assetManager)
 {
     const ShaderProgram* program = assetManager.GetRegistry<ShaderRegistry>()->LoadShaderProgram
     (
@@ -34,7 +35,7 @@ std::vector<ShaderPipeline> CreateDirectPBRPipelines(const MeshHandle* mesh, con
     return pipelines;
 }
 
-std::vector<ShaderPipeline> CreateDiffusePBRPipelines(const MeshHandle* mesh, const Project& project, const AssetManager& assetManager)
+std::vector<ShaderPipeline> CreateDiffusePBRPipelines(const Project& project, const AssetManager& assetManager, std::filesystem::path envPath)
 {
     const ShaderProgram* program = assetManager.GetRegistry<ShaderRegistry>()->LoadShaderProgram
     (
@@ -44,12 +45,36 @@ std::vector<ShaderPipeline> CreateDiffusePBRPipelines(const MeshHandle* mesh, co
 
     assert(program && "Program is null!");
 
+    TextureRegistry* textureRegistry = assetManager.GetRegistry<TextureRegistry>();
+    ShaderRegistry* shaderRegistry = assetManager.GetRegistry<ShaderRegistry>();
+    std::filesystem::path directoryPath = envPath.parent_path();
+
+    uint32_t environmentSize = 2048;
+    uint32_t irradianceSize = 64;
+    float sampleDelta = 0.01f;
+
+    // uint32_t environmentSize = 512;
+    // uint32_t irradianceSize = 32;
+    // float sampleDelta = 0.025f;
+
+    const Texture* cubeMap = Renderer::CubeMapPass
+    (
+        envPath,
+        textureRegistry,
+        shaderRegistry,
+        project,
+        environmentSize
+    );
+
     const Texture* irradianceMap = Renderer::IrradianceMapPass
     (
-        project.GetAssetDirectory() / "Environments" / "NewportLoft",
-        assetManager.GetRegistry<TextureRegistry>(),
-        assetManager.GetRegistry<ShaderRegistry>(),
-        project
+        directoryPath,
+        textureRegistry,
+        shaderRegistry,
+        project,
+        cubeMap,
+        irradianceSize,
+        sampleDelta
     );
 
     std::vector<ShaderPipeline> pipelines;
@@ -57,7 +82,95 @@ std::vector<ShaderPipeline> CreateDiffusePBRPipelines(const MeshHandle* mesh, co
 
     assetManager.GetRegistry<ShaderRegistry>()->LoadShaderProgram
     (
-        project.GetShaderDirectory() / "PBR" / "Background" / "BackgroundDiffuse",
+        project.GetShaderDirectory() / "PBR" / "Background",
+        "background"
+    );
+
+    return pipelines;
+}
+
+std::vector<ShaderPipeline> CreateFullPBRPipelines(const Project& project, const AssetManager& assetManager, std::filesystem::path envPath)
+{
+    const ShaderProgram* program = assetManager.GetRegistry<ShaderRegistry>()->LoadShaderProgram
+    (
+        project.GetShaderDirectory() / "PBR" / "FullPBR",
+        "FullPBR"
+    );
+
+    assert(program && "Program is null!");
+
+    TextureRegistry* textureRegistry = assetManager.GetRegistry<TextureRegistry>();
+    ShaderRegistry* shaderRegistry = assetManager.GetRegistry<ShaderRegistry>();
+    std::filesystem::path directoryPath = envPath.parent_path();
+
+
+    uint32_t environmentSize = 2048;
+    uint32_t irradianceSize = 64;
+    uint32_t prefilterSize = 512;
+    uint32_t brdfLutSize = 512;
+    uint32_t prefilterSamples = 1024;
+    float sampleDelta = 0.01f;
+    uint32_t mipLevels = 5;
+    uint32_t sampleCount = 1024;
+
+    /*uint32_t environmentSize = 512;
+    uint32_t irradianceSize = 32;
+    uint32_t prefilterSize = 128;
+    uint32_t brdfLutSize = 512;
+    uint32_t prefilterSamples = 1024;
+    float sampleDelta = 0.025f;
+    uint32_t mipLevels = 5;
+    uint32_t sampleCount = 1024;*/
+
+    const Texture* cubeMap = Renderer::CubeMapPass
+    (
+        envPath,
+        textureRegistry,
+        shaderRegistry,
+        project,
+        environmentSize
+    );
+
+    const Texture* irradianceMap = Renderer::IrradianceMapPass
+    (
+        directoryPath,
+        textureRegistry,
+        shaderRegistry,
+        project,
+        cubeMap,
+        irradianceSize,
+        sampleDelta
+    );
+
+    const Texture* prefilterMap = Renderer::PrefilterMapPass
+    (
+        directoryPath,
+        textureRegistry,
+        shaderRegistry,
+        project,
+        cubeMap,
+        prefilterSize,
+        mipLevels,
+        prefilterSamples,
+        static_cast<float>(prefilterSize)
+    );
+
+    const Texture* brdfTable = Renderer::BrdfTablePass
+    (
+        directoryPath,
+        textureRegistry,
+        shaderRegistry,
+        project,
+        brdfLutSize,
+        sampleCount
+    );
+
+    std::vector<ShaderPipeline> pipelines;
+    pipelines.emplace_back(program, std::make_shared<FullPBRBinder>(irradianceMap, prefilterMap, brdfTable));
+
+    assetManager.GetRegistry<ShaderRegistry>()->LoadShaderProgram
+    (
+        project.GetShaderDirectory() / "PBR" / "Background",
         "background"
     );
 
@@ -66,19 +179,38 @@ std::vector<ShaderPipeline> CreateDiffusePBRPipelines(const MeshHandle* mesh, co
 
 void SceneLoader::CreateTestSpheres(Scene* scene, const Project& project, const Window* window, const AssetManager& assetManager)
 {
-    const MeshHandle* mesh = assetManager.LoadObjFile(project.GetMeshDirectory() / "sphere/mesh.obj");
+    std::vector<const MeshHandle*> meshes
+    {
+        assetManager.LoadObjFile(project.GetMeshDirectory() / "spheres/gold/mesh.obj"),
+        assetManager.LoadObjFile(project.GetMeshDirectory() / "spheres/grass/mesh.obj"),
+        assetManager.LoadObjFile(project.GetMeshDirectory() / "spheres/plastic/mesh.obj"),
+        assetManager.LoadObjFile(project.GetMeshDirectory() / "spheres/rusted_iron/mesh.obj"),
+        assetManager.LoadObjFile(project.GetMeshDirectory() / "spheres/wall/mesh.obj")
+    };
 
-    std::vector<ShaderPipeline> pipelines = CreateDiffusePBRPipelines(mesh, project, assetManager);
+    std::vector<ShaderPipeline> pipelines = CreateFullPBRPipelines(project, assetManager, project.GetAssetDirectory() / "Environments" / "Studio" / "env.exr");
 
 
-    glm::vec3 lightPositions[] = { glm::vec3(0.0f, 0.0f, 10.0f) };
-    glm::vec3 lightColors[] = { glm::vec3(150.0f, 150.0f, 150.0f) };
+    glm::vec3 lightPositions[] = 
+    {
+        glm::vec3(-10.0f,  10.0f, 10.0f),
+        glm::vec3(10.0f,  10.0f, 10.0f),
+        glm::vec3(-10.0f, -10.0f, 10.0f),
+        glm::vec3(10.0f, -10.0f, 10.0f),
+    };
 
-    int rows = 7;
-    int columns = 7;
+    glm::vec3 lightColors[] =
+    {
+        glm::vec3(300.0f, 300.0f, 300.0f),
+        glm::vec3(300.0f, 300.0f, 300.0f),
+        glm::vec3(300.0f, 300.0f, 300.0f),
+        glm::vec3(300.0f, 300.0f, 300.0f)
+    };
+
+    int rows = meshes.size();
+    int columns = meshes.size();
     float spacing = 2.5;
 
-    glm::mat4 model = glm::mat4(1.0f);
     for (int row = 0; row < rows; ++row)
     {
         for (int col = 0; col < columns; ++col)
@@ -91,7 +223,7 @@ void SceneLoader::CreateTestSpheres(Scene* scene, const Project& project, const 
                 glm::vec3(0, 0, 0),
                 glm::vec3(1, 1, 1)
             );
-            sphere.AddComponent<Mesh>(mesh);
+            sphere.AddComponent<Mesh>(meshes[row]);
             Material& material = sphere.AddComponent<Material>();
             material.pipelines = pipelines;
         }
@@ -105,7 +237,7 @@ void SceneLoader::CreateTestSpheres(Scene* scene, const Project& project, const 
             glm::vec3(0, 0, 0),
             glm::vec3(0.5f)
         );
-        lightSphere.AddComponent<Mesh>(mesh);
+        lightSphere.AddComponent<Mesh>(meshes[0]);
         Material& material = lightSphere.AddComponent<Material>();
         material.pipelines = pipelines;
         lightSphere.AddComponent<PointLight>(lightColors[i]);

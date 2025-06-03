@@ -2,7 +2,7 @@
 #include <spdlog/spdlog.h>
 #include "Assets/TextureFactory.h"
 
-std::unique_ptr<Texture> TextureFactory::CreateEmpty(uint32_t width, uint32_t height, bool makeResident)
+std::unique_ptr<Texture> TextureFactory::CreateEmpty2D(uint32_t width, uint32_t height, bool makeResident)
 {
     if (width == 0 || height == 0) return nullptr;
 
@@ -16,6 +16,37 @@ std::unique_ptr<Texture> TextureFactory::CreateEmpty(uint32_t width, uint32_t he
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
     glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGBA8, width, height);
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    return CreateTextureWrapper(id, GL_TEXTURE_2D, width, height, makeResident);
+}
+
+std::unique_ptr<Texture> TextureFactory::CreateEmpty2DLinear(uint32_t width, uint32_t height, int internalFormat, uint32_t externalFormat, uint32_t dataType, bool makeResident)
+{
+    if (width == 0 || height == 0) return nullptr;
+
+    uint32_t id;
+    glGenTextures(1, &id);
+    glBindTexture(GL_TEXTURE_2D, id);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    glTexImage2D
+    (
+        GL_TEXTURE_2D,
+        0,
+        internalFormat,
+        width,
+        height,
+        0,
+        externalFormat,
+        dataType,
+        0
+    );
+
     glBindTexture(GL_TEXTURE_2D, 0);
 
     return CreateTextureWrapper(id, GL_TEXTURE_2D, width, height, makeResident);
@@ -133,7 +164,16 @@ std::unique_ptr<Texture> TextureFactory::CreateFromMipChain(const std::vector<st
     return CreateTextureWrapper(id, GL_TEXTURE_2D, width, height, makeResident);
 }
 
-std::unique_ptr<Texture> TextureFactory::CreateEmptyCubeMap(uint32_t size, GLint internalFormat, GLenum externalFormat, GLenum dataType, bool makeResident)
+std::unique_ptr<Texture> TextureFactory::CreateEmptyCubeMap
+(
+    uint32_t size, 
+    int internalFormat, 
+    uint32_t externalFormat, 
+    uint32_t dataType,
+    int minFilter,
+    int magFilter,
+    bool makeResident
+)
 {
     if (size == 0) return nullptr;
 
@@ -159,8 +199,8 @@ std::unique_ptr<Texture> TextureFactory::CreateEmptyCubeMap(uint32_t size, GLint
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, minFilter);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, magFilter);
 
     glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
 

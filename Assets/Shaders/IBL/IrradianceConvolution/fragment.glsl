@@ -7,6 +7,8 @@ uniform samplerCube environmentMap;
 
 const float PI = 3.14159265359;
 
+uniform float sampleDelta;
+
 void main()
 {
     vec3 N = normalize(worldPosition);
@@ -17,7 +19,6 @@ void main()
     vec3 right = normalize(cross(up, N));
     up = normalize(cross(N, right));
 
-    float sampleDelta = 0.025;
     float nrSamples = 0.0f;
     for (float phi = 0.0; phi < 2.0 * PI; phi += sampleDelta)
     {

@@ -7,7 +7,7 @@ const Texture* TextureRegistry::RegisterEmptyTexture(uint32_t width, uint32_t he
 {
 	std::string textureName = std::format("empty_{}x{}", width, height);
 	if (const Texture* cached = GetAsset(textureName)) return cached;
-	auto texture = TextureFactory::CreateEmpty(width, height);
+	auto texture = TextureFactory::CreateEmpty2D(width, height);
 	return AddAsset(textureName, std::move(texture));
 }
 

@@ -17,7 +17,9 @@ const MaterialRange* MaterialRegistry::LoadMaterialRange
 	for (size_t materialIndex = 0; materialIndex < materialSources.size(); materialIndex++)
 	{
 		const tinyobj::material_t& materialSource = materialSources[materialIndex];
-		std::string materialName = materialSource.name.empty() ? AssetManager::GetDefaultAssetName<MaterialAsset>(rangeName, std::to_string(materialIndex)) : materialSource.name;
+		std::string materialName = materialSource.name.empty() ? 
+			directoryPath.filename().string() + AssetManager::GetDefaultAssetName<MaterialAsset>(rangeName, std::to_string(materialIndex))
+			: materialSource.name;
 		MaterialAsset material = LoadMaterial(materialSource, materialName, directoryPath, textureRegistry);
 		materials.emplace_back(material);
 	}
@@ -118,7 +120,7 @@ const Texture* MaterialRegistry::GetTexture
 		{
 			std::unique_ptr<GLImage> image = GLImage::LoadImage(texturePath, colorSpace);
 			if (!image) return nullptr;
-			texture = textureRegistry->RegisterImageTexture(*image, texturePath.stem().string());
+			texture = textureRegistry->RegisterImageTexture(*image, directoryPath.filename().string() + "_" + texturePath.stem().string());
 		}
 		else if (is_directory(texturePath))
 		{
@@ -185,11 +187,16 @@ bool MaterialRegistry::ValidateRMAMerge(
 	const std::unique_ptr<GLImage>& image,
 	uint32_t expectedWidth,
 	uint32_t expectedHeight,
-	const std::filesystem::path& filePath
-)
+	const std::filesystem::path& filePath)
 {
-	if (!image)
+	if (!image) 
 		return true;
+
+	if (image->Width != expectedWidth || image->Height != expectedHeight)
+	{
+		spdlog::error("RMA generation failed: '{}' resolution mismatch.", filePath.string());
+		return false;
+	}
 
 	switch (image->Format)
 	{
@@ -199,15 +206,16 @@ bool MaterialRegistry::ValidateRMAMerge(
 		case ImageFormat::U32_R:
 			break;
 
-		default:
-			spdlog::error("RMA generation failed: '{}' is not single-channel image.", filePath.string());
-			return false;
-	}
+		case ImageFormat::F32_RGB:
+		case ImageFormat::F32_RGBA:
+		case ImageFormat::U8_RGBA:
+			spdlog::warn("RMA generation: '{}' has multiple channels – using the first channel only.",
+				filePath.string());
+			break;
 
-	if (image->Width != expectedWidth || image->Height != expectedHeight)
-	{
-		spdlog::error("RMA generation failed: '{}' resolution mismatch.", filePath.string());
-		return false;
+		default:
+			spdlog::error("RMA generation failed: '{}' unsupported image format.", filePath.string());
+			return false;
 	}
 
 	return true;
@@ -263,27 +271,42 @@ float MaterialRegistry::GetFloatPixel(const GLImage* image, size_t i, float fall
 	{
 		case ImageFormat::F32_R:
 		{
-			const float* data = reinterpret_cast<const float*>(FreeImage_GetBits(image->Bitmap));
-			return data[i];
+			const float* d = reinterpret_cast<const float*>(FreeImage_GetBits(image->Bitmap));
+			return d[i];
 		}
 		case ImageFormat::U8_R:
 		{
-			const uint8_t* data = reinterpret_cast<const uint8_t*>(FreeImage_GetBits(image->Bitmap));
-			return static_cast<float>(data[i]) / static_cast<float>(std::numeric_limits<uint8_t>::max());
+			const uint8_t* d = reinterpret_cast<const uint8_t*>(FreeImage_GetBits(image->Bitmap));
+			return static_cast<float>(d[i]) / 255.0f;
 		}
 		case ImageFormat::U16_R:
 		{
-			const uint16_t* data = reinterpret_cast<const uint16_t*>(FreeImage_GetBits(image->Bitmap));
-			return static_cast<float>(data[i]) / static_cast<float>(std::numeric_limits<uint16_t>::max());
+			const uint16_t* d = reinterpret_cast<const uint16_t*>(FreeImage_GetBits(image->Bitmap));
+			return static_cast<float>(d[i]) / 65535.0f;
 		}
 		case ImageFormat::U32_R:
 		{
-			const uint32_t* data = reinterpret_cast<const uint32_t*>(FreeImage_GetBits(image->Bitmap));
-			return static_cast<float>(data[i]) / static_cast<float>(std::numeric_limits<uint32_t>::max());
+			const uint32_t* d = reinterpret_cast<const uint32_t*>(FreeImage_GetBits(image->Bitmap));
+			return static_cast<float>(d[i]) / 4294967295.0f;
+		}
+		case ImageFormat::F32_RGB:
+		{
+			const float* d = reinterpret_cast<const float*>(FreeImage_GetBits(image->Bitmap));
+			return d[i * 3 + 0];
+		}
+		case ImageFormat::F32_RGBA:
+		{
+			const float* d = reinterpret_cast<const float*>(FreeImage_GetBits(image->Bitmap));
+			return d[i * 4 + 0];
+		}
+		case ImageFormat::U8_RGBA:
+		{
+			const uint8_t* d = reinterpret_cast<const uint8_t*>(FreeImage_GetBits(image->Bitmap));
+			return static_cast<float>(d[i * 4 + 0]) / 255.0f;
 		}
 		default:
 			return fallback;
 	}
-};
+}
 
 

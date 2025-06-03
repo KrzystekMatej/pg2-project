@@ -149,9 +149,9 @@ const Texture* MaterialRegistry::GetRMATexture
 	std::filesystem::path metalPath = directoryPath / materialSource.metallic_texname;
 	std::filesystem::path aoPath = directoryPath / materialSource.ambient_texname;
 
-	std::unique_ptr<GLImage> roughImage = GLImage::LoadImage(roughPath, ColorSpace::Linear, true, false);
-	std::unique_ptr<GLImage> metalImage = GLImage::LoadImage(metalPath, ColorSpace::Linear, true, false);
-	std::unique_ptr<GLImage> aoImage = GLImage::LoadImage(aoPath, ColorSpace::Linear, true, false);
+	std::unique_ptr<GLImage> roughImage = GLImage::LoadImage(roughPath, ColorSpace::Linear, false);
+	std::unique_ptr<GLImage> metalImage = GLImage::LoadImage(metalPath, ColorSpace::Linear, false);
+	std::unique_ptr<GLImage> aoImage = GLImage::LoadImage(aoPath, ColorSpace::Linear, false);
 
 	if (!roughImage) { spdlog::warn("Roughness texture missing: replaced with fallback."); }
 	if (!metalImage) { spdlog::warn("Metallic texture missing: replaced with fallback."); }

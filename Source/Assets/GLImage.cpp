@@ -3,39 +3,93 @@
 #include <string>
 #include <spdlog/spdlog.h>
 
-std::unique_ptr<GLImage> GLImage::LoadImage(const std::filesystem::path& filePath, ColorSpace colorSpace, bool verticalFlip, bool logError)
+std::unique_ptr<GLImage> GLImage::LoadImage
+(
+	const std::filesystem::path& filePath,
+	ColorSpace colorSpace,
+	bool logError
+)
 {
-	std::string filePathStr = filePath.string();
-
+	const std::string pathStr = filePath.string();
 	if (!is_regular_file(filePath))
 	{
-		if (logError) spdlog::error("LoadImage: File '{}' does not exist", filePathStr);
+		if (logError) spdlog::error("LoadImage: File '{}' does not exist", pathStr);
 		return nullptr;
 	}
 
-	FREE_IMAGE_FORMAT format = FreeImage_GetFileType(filePathStr.c_str(), 0);
-	if (format == FIF_UNKNOWN) format = FreeImage_GetFIFFromFilename(filePathStr.c_str());
-	if (format == FIF_UNKNOWN || !FreeImage_FIFSupportsReading(format))
+	FREE_IMAGE_FORMAT fif = FreeImage_GetFileType(pathStr.c_str(), 0);
+	if (fif == FIF_UNKNOWN) fif = FreeImage_GetFIFFromFilename(pathStr.c_str());
+	if (fif == FIF_UNKNOWN || !FreeImage_FIFSupportsReading(fif))
 	{
-		if (logError) spdlog::error("LoadImage: Unsupported file format '{}'", filePathStr);
+		if (logError) spdlog::error("LoadImage: Unsupported format '{}'", pathStr);
 		return nullptr;
 	}
 
-	FIBITMAP* bitmap = FreeImage_Load(format, filePathStr.c_str());
-	if (!bitmap)
+	FIBITMAP* bmp = FreeImage_Load(fif, pathStr.c_str());
+	if (!bmp)
 	{
-		if (logError) spdlog::error("LoadImage: Failed to load image '{}'", filePathStr);
+		if (logError) spdlog::error("LoadImage: Can't load '{}'", pathStr);
 		return nullptr;
 	}
 
-	if (verticalFlip) FreeImage_FlipVertical(bitmap);
 
-	const FREE_IMAGE_TYPE imageType = FreeImage_GetImageType(bitmap);
-	uint32_t width = FreeImage_GetWidth(bitmap);
-	uint32_t height = FreeImage_GetHeight(bitmap);
+	auto exif_orientation = [&]()
+		{
+			FITAG* tag = nullptr;
+			if (FreeImage_GetMetadata(FIMD_EXIF_MAIN, bmp, "Orientation", &tag) && tag)
+				return *static_cast<const uint16_t*>(FreeImage_GetTagValue(tag));
+			return uint16_t{ 1 };
+		};
 
-	int32_t  internalFormat = 0;
-	int32_t  externalFormat = 0;
+	bool mustFlip = false;
+
+	switch (fif)
+	{
+	case FIF_TARGA:
+	{
+		FILE* f = fopen(pathStr.c_str(), "rb");
+		if (f)
+		{
+			fseek(f, 17, SEEK_SET);
+			uint8_t desc = 0; fread(&desc, 1, 1, f); fclose(f);
+			bool originTopLeft = (desc & 0x20) != 0;
+			mustFlip = originTopLeft;
+		}
+		break;
+	}
+	case FIF_JPEG:
+	case FIF_TIFF:
+	{
+		uint16_t orient = exif_orientation();
+		mustFlip = (orient == 3 || orient == 4 || orient == 5 ||
+			orient == 6 || orient == 7 || orient == 8);
+		break;
+	}
+	case FIF_EXR:
+	{
+		FITAG* tag = nullptr;
+		if (FreeImage_GetMetadata(FIMD_EXR, bmp, "lineOrder", &tag) && tag)
+		{
+			const char* lo = static_cast<const char*>(FreeImage_GetTagValue(tag));
+			mustFlip = (strcmp(lo, "INCREASING_Y") == 0);
+		}
+		break;
+	}
+	default:
+		mustFlip = false;
+		break;
+	}
+
+	if (mustFlip)
+		FreeImage_FlipVertical(bmp);
+
+
+	const FREE_IMAGE_TYPE imageType = FreeImage_GetImageType(bmp);
+	const uint32_t width = FreeImage_GetWidth(bmp);
+	const uint32_t height = FreeImage_GetHeight(bmp);
+
+	int32_t internalFormat = 0;
+	int32_t externalFormat = 0;
 	uint32_t dataType = 0;
 	ImageFormat myFormat = ImageFormat::Unknown;
 
@@ -85,7 +139,7 @@ std::unique_ptr<GLImage> GLImage::LoadImage(const std::filesystem::path& filePat
 		case FIT_BITMAP:
 		default:
 		{
-			const unsigned bpp = FreeImage_GetBPP(bitmap);
+			const unsigned bpp = FreeImage_GetBPP(bmp);
 			switch (bpp)
 			{
 				case 8:
@@ -97,16 +151,15 @@ std::unique_ptr<GLImage> GLImage::LoadImage(const std::filesystem::path& filePat
 				case 24:
 				case 32:
 				{
-					FIBITMAP* converted = FreeImage_ConvertTo32Bits(bitmap);
+					FIBITMAP* converted = FreeImage_ConvertTo32Bits(bmp);
 					if (!converted)
 					{
-						FreeImage_Unload(bitmap);
-						spdlog::error("LoadImage: Failed to convert image to 32-bit '{}'",
-							filePathStr);
+						FreeImage_Unload(bmp);
+						spdlog::error("LoadImage: Failed to convert image to 32-bit '{}'", pathStr);
 						return nullptr;
 					}
-					FreeImage_Unload(bitmap);
-					bitmap = converted;
+					FreeImage_Unload(bmp);
+					bmp = converted;
 
 					myFormat = ImageFormat::U8_RGBA;
 					externalFormat = GL_BGRA;
@@ -115,8 +168,8 @@ std::unique_ptr<GLImage> GLImage::LoadImage(const std::filesystem::path& filePat
 					break;
 				}
 				default:
-					FreeImage_Unload(bitmap);
-					spdlog::error("LoadImage: Unsupported BPP {} in '{}'", bpp, filePathStr);
+					FreeImage_Unload(bmp);
+					spdlog::error("LoadImage: Unsupported BPP {} in '{}'", bpp, pathStr);
 					return nullptr;
 			}
 
@@ -124,7 +177,7 @@ std::unique_ptr<GLImage> GLImage::LoadImage(const std::filesystem::path& filePat
 		}
 	}
 
-	return std::make_unique<GLImage>(bitmap, width, height, dataType, internalFormat, externalFormat, myFormat);
+	return std::make_unique<GLImage>(bmp, width, height, dataType, internalFormat, externalFormat, myFormat);
 }
 
 std::vector<std::unique_ptr<GLImage>> GLImage::LoadMipChain(const std::filesystem::path& directoryPath, ColorSpace colorSpace)

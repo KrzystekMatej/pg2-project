@@ -188,7 +188,7 @@ void SceneLoader::CreateTestSpheres(Scene* scene, const Project& project, const 
         assetManager.LoadObjFile(project.GetMeshDirectory() / "spheres/wall/mesh.obj")
     };
 
-    std::vector<ShaderPipeline> pipelines = CreateFullPBRPipelines(project, assetManager, project.GetAssetDirectory() / "Environments" / "Studio" / "env.exr");
+    std::vector<ShaderPipeline> pipelines = CreateFullPBRPipelines(project, assetManager, project.GetAssetDirectory() / "Environments" / "KiaraDawn" / "env.exr");
 
 
     glm::vec3 lightPositions[] = 
@@ -221,7 +221,7 @@ void SceneLoader::CreateTestSpheres(Scene* scene, const Project& project, const 
             (
                 glm::vec3((float)(col - (columns / 2)) * spacing, (float)(row - (rows / 2)) * spacing, 0),
                 glm::vec3(0, 0, 0),
-                glm::vec3(1, 1, 1)
+                glm::vec3(2, 2, 2)
             );
             sphere.AddComponent<Mesh>(meshes[row]);
             Material& material = sphere.AddComponent<Material>();

@@ -17,9 +17,9 @@ public:
         glm::mat3 normal = transform.GetNormalMatrix();
         glm::mat4 pv = ctx.Projection * ctx.View;
 
-        program.SetMatrix4x4("modelMatrix", glm::value_ptr(model));
-        program.SetMatrix3x3("normalMatrix", glm::value_ptr(normal));
-        program.SetMatrix4x4("pvmMatrix", glm::value_ptr(pv * model));
+        program.SetMatrix4x4("modelMatrix", model);
+        program.SetMatrix3x3("normalMatrix", normal);
+        program.SetMatrix4x4("pvmMatrix", pv * model);
         mesh.GetVertexArray().Bind();
 
         program.SetVec3("cameraPosition", glm::value_ptr(ctx.CameraPosition));

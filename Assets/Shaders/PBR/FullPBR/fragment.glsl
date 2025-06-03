@@ -38,15 +38,19 @@ uniform samplerCube irradianceMap;
 uniform samplerCube prefilterMap;
 uniform sampler2D brdfTable;
 
+const int LIGHT_LIMIT = 10;
+
 struct PointLight
 {
-    vec3 position;
-    vec3 color;
+    vec3  position;
+    vec3  color;
 };
 
-#define LIGHT_LIMIT 10
-uniform PointLight lights[LIGHT_LIMIT];
-uniform uint lightCount;
+uniform PointLight  lights[LIGHT_LIMIT];
+uniform samplerCube depthMaps[LIGHT_LIMIT];
+uniform float       farPlanes[LIGHT_LIMIT];
+uniform uint        lightCount;
+uniform bool        enableShadows;
 
 const float PI = 3.14159265359;
 
@@ -108,6 +112,35 @@ vec3 GetNormal(Material material)
     return N;
 }
 
+const vec3 gridDisk[20] = vec3[20]
+(
+    vec3(1, 1, 1), vec3(1, -1, 1), vec3(-1, -1, 1), vec3(-1, 1, 1),
+    vec3(1, 1, -1), vec3(1, -1, -1), vec3(-1, -1, -1), vec3(-1, 1, -1),
+    vec3(1, 1, 0), vec3(1, -1, 0), vec3(-1, -1, 0), vec3(-1, 1, 0),
+    vec3(1, 0, 1), vec3(-1, 0, 1), vec3(1, 0, -1), vec3(-1, 0, -1),
+    vec3(0, 1, 1), vec3(0, -1, 1), vec3(0, -1, -1), vec3(0, 1, -1)
+);
+
+float ShadowPoint(int idx, vec3 fragPos)
+{
+    vec3 fragToLight = fragPos - lights[idx].position;
+    float currentDist = length(fragToLight);
+    float farPlane = farPlanes[idx];
+
+    float diskRadius = (1.0 + currentDist / farPlane) / 25.0;
+    float bias = 0.15;
+    float shadow = 0.0;
+
+    for (int i = 0; i < 20; ++i)
+    {
+        float closest = texture(depthMaps[idx],
+            fragToLight + gridDisk[i] * diskRadius).r * farPlane;
+        shadow += currentDist - bias > closest ? 1.0 : 0.0;
+    }
+    return shadow / 20.0;
+}
+
+
 void main()
 {
     Material material = materials[fragMaterialIndex];
@@ -149,7 +182,9 @@ void main()
 
         float NdotL = max(dot(N, L), 0.0);
 
-        Lo += (kD * albedo / PI + specular) * radiance * NdotL;
+        float shadow = (enableShadows) ? ShadowPoint(i, worldPosition) : 0.0;
+
+        Lo += (1.0 - shadow) * ((kD * albedo / PI + specular) * radiance * NdotL);
     }
 
     vec3 F = FresnelSchlickRoughness(max(dot(N, V), 0.0), F0, roughness);
@@ -169,10 +204,8 @@ void main()
     vec3 ambient = (kD * diffuse + specular) * ao;
 
     vec3 color = ambient + Lo;
-
     color = color / (color + vec3(1.0));
     color = pow(color, vec3(1.0 / 2.2));
 
     fragColor = vec4(color, 1.0);
 }
-

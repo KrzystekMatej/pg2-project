@@ -78,7 +78,6 @@ bool Application::PrepareWindow(int width, int height, const char* title)
 
 void Application::Run()
 {
-	m_Window.SetViewport();
 	while (m_Window.IsOpen())
 	{
 		Time::Update();
@@ -87,7 +86,7 @@ void Application::Run()
 		m_AISystem.Update(m_ActiveScene);
 
 		m_Window.Clear();
-		m_RenderSystem.Draw(m_ActiveScene, m_Window.GetAspectRatio());
+		m_RenderSystem.Draw(m_ActiveScene, m_Window);
 		m_Window.SwapBuffers();
 	}
 }

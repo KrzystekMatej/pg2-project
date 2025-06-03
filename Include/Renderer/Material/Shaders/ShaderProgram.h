@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 #include <unordered_map>
+#include <glm/glm.hpp>
 #include "Shader.h"
 #include "Renderer/Material/Texture.h"
 #include "Config.h"
@@ -29,8 +30,9 @@ public:
 	void SetVec2(const std::string& name, const float* vec2) const;
 	void SetVec3(const std::string& name, const float* vec3) const;
 	void SetVec4(const std::string& name, const float* vec4) const;
-	void SetMatrix3x3(const std::string& name, const float* mat3) const;
-	void SetMatrix4x4(const std::string& name, const float* mat4) const;
+	void SetMatrix3x3(const std::string& name, const glm::mat3& mat) const;
+	void SetMatrix4x4(const std::string& name, const glm::mat4& mat) const;
+	void SetMatrix4x4Array(const std::string& baseName, uint32_t count, const glm::mat4* data) const;
 	void SetTextureSampler(const std::string& name, const Texture& texture) const;
 private:
 	bool CheckLinking() const;

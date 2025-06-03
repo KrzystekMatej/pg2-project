@@ -2,6 +2,11 @@
 #include "Assets/GLImage.h"
 #include <string>
 #include <spdlog/spdlog.h>
+#include <OpenEXR/ImfInputFile.h>
+#include <OpenEXR/ImfHeader.h>
+#include <OpenEXR/ImfStringAttribute.h>
+#include <OpenEXR/ImfArray.h>
+#include <OpenEXR/ImfRgbaFile.h>
 
 std::unique_ptr<GLImage> GLImage::LoadImage
 (
@@ -67,11 +72,21 @@ std::unique_ptr<GLImage> GLImage::LoadImage
 	}
 	case FIF_EXR:
 	{
-		FITAG* tag = nullptr;
-		if (FreeImage_GetMetadata(FIMD_EXR, bmp, "lineOrder", &tag) && tag)
+		try
 		{
-			const char* lo = static_cast<const char*>(FreeImage_GetTagValue(tag));
-			mustFlip = (strcmp(lo, "INCREASING_Y") == 0);
+			Imf::InputFile file(pathStr.c_str());
+			const Imf::Header& header = file.header();
+
+			if (const Imf::StringAttribute* attr = header.findTypedAttribute<Imf::StringAttribute>("lineOrder"))
+			{
+				const std::string& lo = attr->value();
+				mustFlip = (lo == "INCREASING_Y");
+			}
+		}
+		catch (const std::exception& e)
+		{
+			if (logError)
+				spdlog::error("LoadImage: EXR metadata read failed: {}", e.what());
 		}
 		break;
 	}
@@ -142,35 +157,81 @@ std::unique_ptr<GLImage> GLImage::LoadImage
 			const unsigned bpp = FreeImage_GetBPP(bmp);
 			switch (bpp)
 			{
-				case 8:
-					myFormat = ImageFormat::U8_R;
-					internalFormat = GL_R8;
-					externalFormat = GL_RED;
-					dataType = GL_UNSIGNED_BYTE;
-					break;
-				case 24:
-				case 32:
-				{
-					FIBITMAP* converted = FreeImage_ConvertTo32Bits(bmp);
-					if (!converted)
-					{
-						FreeImage_Unload(bmp);
-						spdlog::error("LoadImage: Failed to convert image to 32-bit '{}'", pathStr);
-						return nullptr;
-					}
-					FreeImage_Unload(bmp);
-					bmp = converted;
+			case 8:
+				myFormat = ImageFormat::U8_R;
+				internalFormat = GL_R8;
+				externalFormat = GL_RED;
+				dataType = GL_UNSIGNED_BYTE;
+				break;
 
-					myFormat = ImageFormat::U8_RGBA;
-					externalFormat = GL_BGRA;
-					dataType = GL_UNSIGNED_BYTE;
-					internalFormat = colorSpace == ColorSpace::SRGB ? GL_SRGB8_ALPHA8 : GL_RGBA8;
-					break;
-				}
-				default:
+			case 24:
+			case 32:
+			{
+				FIBITMAP* converted = FreeImage_ConvertTo32Bits(bmp);
+				if (!converted)
+				{
 					FreeImage_Unload(bmp);
-					spdlog::error("LoadImage: Unsupported BPP {} in '{}'", bpp, pathStr);
+					spdlog::error("LoadImage: Failed to convert image to 32-bit '{}'", pathStr);
 					return nullptr;
+				}
+				FreeImage_Unload(bmp);
+				bmp = converted;
+
+				myFormat = ImageFormat::U8_RGBA;
+				externalFormat = GL_BGRA;
+				dataType = GL_UNSIGNED_BYTE;
+				internalFormat = (colorSpace == ColorSpace::SRGB) ? GL_SRGB8_ALPHA8 : GL_RGBA8;
+				break;
+			}
+
+			case 48:
+			{
+				// RGB16 ? RGB8 (24bit), následnì pøevést na RGBA8 (32bit)
+				FIBITMAP* temp24 = FreeImage_ConvertTo24Bits(bmp);
+				FreeImage_Unload(bmp);
+				if (!temp24)
+				{
+					spdlog::error("LoadImage: Failed to convert 48bpp to 24bpp '{}'", pathStr);
+					return nullptr;
+				}
+				bmp = FreeImage_ConvertTo32Bits(temp24);
+				FreeImage_Unload(temp24);
+				if (!bmp)
+				{
+					spdlog::error("LoadImage: Failed to convert 24bpp to 32bpp '{}'", pathStr);
+					return nullptr;
+				}
+
+				myFormat = ImageFormat::U8_RGBA;
+				externalFormat = GL_BGRA;
+				dataType = GL_UNSIGNED_BYTE;
+				internalFormat = (colorSpace == ColorSpace::SRGB) ? GL_SRGB8_ALPHA8 : GL_RGBA8;
+				break;
+			}
+
+			case 64:
+			{
+				// RGBA16 ? RGBA8 (32bit)
+				FIBITMAP* converted = FreeImage_ConvertTo32Bits(bmp);
+				FreeImage_Unload(bmp);
+				if (!converted)
+				{
+					spdlog::error("LoadImage: Failed to convert 64bpp to 32bpp '{}'", pathStr);
+					return nullptr;
+				}
+				bmp = converted;
+
+				myFormat = ImageFormat::U8_RGBA;
+				externalFormat = GL_BGRA;
+				dataType = GL_UNSIGNED_BYTE;
+				internalFormat = (colorSpace == ColorSpace::SRGB) ? GL_SRGB8_ALPHA8 : GL_RGBA8;
+				break;
+			}
+
+			default:
+				FreeImage_Unload(bmp);
+				spdlog::error("LoadImage: Unsupported BPP {} in '{}'", bpp, pathStr);
+				return nullptr;
 			}
 
 			break;

@@ -20,6 +20,8 @@ find_package(spdlog CONFIG REQUIRED)
 find_package(EnTT CONFIG REQUIRED)
 find_package(yaml-cpp CONFIG REQUIRED)
 find_package(tinyobjloader CONFIG REQUIRED)
+find_package(OpenEXR CONFIG REQUIRED)
+find_package(Imath CONFIG REQUIRED)
 
 if (WIN32)
     set(OIDN_LIB_NAME "${CMAKE_SOURCE_DIR}/External/oidn/lib/OpenImageDenoise.lib")
@@ -33,7 +35,10 @@ target_link_libraries(RayTracer PRIVATE
     OpenGL::GL
     glad
     freeimage::FreeImage 
-    freeimage::FreeImagePlus 
+    freeimage::FreeImagePlus
+    OpenEXR::OpenEXR
+    Imath::Imath
+    Imath::ImathConfig
     glm::glm-header-only
     assimp::assimp
     ${OIDN_LIB_NAME}

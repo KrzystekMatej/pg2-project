@@ -3,9 +3,9 @@
 #include "Renderer/Buffers/RenderBuffer.h"
 #include <spdlog/spdlog.h>
 
-FrameBuffer::FrameBuffer()
+FrameBuffer::FrameBuffer(bool init)
 {
-    glGenFramebuffers(1, &m_Id);
+    if (init) glGenFramebuffers(1, &m_Id);
 }
 
 FrameBuffer::~FrameBuffer()

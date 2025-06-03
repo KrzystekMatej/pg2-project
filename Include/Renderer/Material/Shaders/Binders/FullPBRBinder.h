@@ -1,56 +1,66 @@
 #pragma once
-#include <vector>
 #include <glm/gtc/type_ptr.hpp>
-#include <spdlog/spdlog.h>
 #include "ShaderBinder.h"
 #include "Renderer/Material/Texture.h"
+#include "ECS/Components/PointLight.h"
 
 class FullPBRBinder : public ShaderBinder
 {
 public:
-    FullPBRBinder(const Texture* irradianceMap, const Texture* prefilterMap, const Texture* brdfTable)
-        : m_IrradianceMap(irradianceMap), m_PrefilterMap(prefilterMap), m_BrdfTable(brdfTable) {}
-
+    FullPBRBinder(const Texture* irradianceMap, const Texture* prefilterMap, const Texture* brdfTable, bool enableShadows = true)
+        : m_IrradianceMap(irradianceMap), m_PrefilterMap(prefilterMap), m_BrdfTable(brdfTable), m_EnableShadows(enableShadows) {}
 
     void Bind(const ShaderProgram& program, const DrawContext& ctx, const Transform& transform, const MeshHandle& mesh) const override
     {
         glm::mat4 model = transform.GetLocalToWorldMatrix();
+        glm::mat4 pvm = ctx.Projection * ctx.View * model;
         glm::mat3 normal = transform.GetNormalMatrix();
-        glm::mat4 pv = ctx.Projection * ctx.View;
 
-        program.SetMatrix4x4("modelMatrix", glm::value_ptr(model));
-        program.SetMatrix3x3("normalMatrix", glm::value_ptr(normal));
-        program.SetMatrix4x4("pvmMatrix", glm::value_ptr(pv * model));
-        mesh.GetVertexArray().Bind();
-
+        program.SetMatrix4x4("modelMatrix", model);
+        program.SetMatrix3x3("normalMatrix", normal);
+        program.SetMatrix4x4("pvmMatrix", pvm);
         program.SetVec3("cameraPosition", glm::value_ptr(ctx.CameraPosition));
 
+        Texture::Activate(0);
+        m_IrradianceMap->Bind();
+        program.SetInt32("irradianceMap", 0);
+
+        Texture::Activate(1);
+        m_PrefilterMap->Bind();
+        program.SetInt32("prefilterMap", 1);
+
+        Texture::Activate(2);
+        m_BrdfTable->Bind();
+        program.SetInt32("brdfTable", 2);
+
         uint32_t i = 0;
-        for (auto [lightEntity, lightTransform, light] : ctx.LightView.each())
+        for (auto [entity, transform, light] : ctx.LightView.each())
         {
-            if (i < PointLight::s_MaxLightCount)
+            if (i >= PointLight::s_MaxLightCount) break;
+
+            program.SetVec3(std::format("lights[{}].position", i), glm::value_ptr(transform.Position));
+            program.SetVec3(std::format("lights[{}].color", i), glm::value_ptr(light.Color));
+
+            program.SetFloat(std::format("farPlanes[{}]", i), light.FarPlane);
+
+            const Texture* depth = PointLight::s_DepthMaps[i].get();
+            if (depth)
             {
-                program.SetVec3(std::format("lights[{}].position", i), glm::value_ptr(lightTransform.Position));
-                program.SetVec3(std::format("lights[{}].color", i), glm::value_ptr(light.Color));
-                i++;
+                Texture::Activate(3 + i);
+                depth->Bind();
+                program.SetInt32(std::format("depthMaps[{}]", i), 3 + i);
             }
-            else spdlog::error("Draw: Light limit exceeded!");
+            i++;
         }
 
         program.SetUInt32("lightCount", i);
-        program.SetInt32("irradianceMap", 0);
-        program.SetInt32("prefilterMap", 1);
-        program.SetInt32("brdfTable", 2);
-        Texture::Activate(0);
-        m_IrradianceMap->Bind();
-        Texture::Activate(1);
-        m_PrefilterMap->Bind();
-        Texture::Activate(2);
-        m_BrdfTable->Bind();
+        program.SetInt32("enableShadows", m_EnableShadows ? 1 : 0);
+        mesh.GetVertexArray().Bind();
     }
 
 private:
     const Texture* m_IrradianceMap;
     const Texture* m_PrefilterMap;
     const Texture* m_BrdfTable;
+    bool m_EnableShadows;
 };

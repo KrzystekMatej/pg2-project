@@ -4,7 +4,6 @@
 #include "ECS/Components/Transform.h"
 #include "ECS/Components/PointLight.h"
 
-
 struct DrawContext
 {
     glm::mat4 Projection;

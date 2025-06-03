@@ -7,7 +7,7 @@ class RenderBuffer;
 class FrameBuffer
 {
 public:
-    FrameBuffer();
+    FrameBuffer(bool init = true);
     ~FrameBuffer();
 
     FrameBuffer(const FrameBuffer&) = delete;

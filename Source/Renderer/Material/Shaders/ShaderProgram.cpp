@@ -125,16 +125,22 @@ void ShaderProgram::SetVec4(const std::string& name, const float* vec4) const
 	if (location != -1) glUniform4fv(location, 1, vec4);
 }
 
-void ShaderProgram::SetMatrix3x3(const std::string& name, const float* mat3) const
+void ShaderProgram::SetMatrix3x3(const std::string& name, const glm::mat3& mat) const
 {
 	int location = GetUniformLocation(name);
-	if (location != -1) glUniformMatrix3fv(location, 1, GL_FALSE, mat3);
+	if (location != -1) glUniformMatrix3fv(location, 1, GL_FALSE, &mat[0][0]);
 }
 
-void ShaderProgram::SetMatrix4x4(const std::string& name, const float* mat4) const
+void ShaderProgram::SetMatrix4x4(const std::string& name, const glm::mat4& mat) const
 {
 	int location = GetUniformLocation(name);
-	if (location != -1) glUniformMatrix4fv(location, 1, GL_FALSE, mat4);
+	if (location != -1) glUniformMatrix4fv(location, 1, GL_FALSE, &mat[0][0]);
+}
+
+void ShaderProgram::SetMatrix4x4Array(const std::string& baseName, uint32_t count, const glm::mat4* mats) const
+{
+	int loc = GetUniformLocation(baseName);
+	if (loc != -1) glUniformMatrix4fv(loc, count, GL_FALSE, &mats[0][0][0]);
 }
 
 void ShaderProgram::SetTextureSampler(const std::string& name, const Texture& texture) const

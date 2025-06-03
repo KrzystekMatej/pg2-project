@@ -11,10 +11,13 @@
 #include "DrawContext.h"
 #include "Assets/TextureRegistry.h"
 #include "Assets/ShaderRegistry.h"
+#include "Buffers/FrameBuffer.h"
 
 class Renderer
 {
 public:
+	static void ShadowPass(const ShaderProgram& shadowShader, entt::registry& registry, const DrawContext& drawCtx);
+
 	static void DrawPass(entt::registry& registry, const DrawContext& drawCtx);
 	static void DiffuseBackgroundPass(const ShaderProgram& backgroundShader, const Texture& backgroundTexture, const glm::mat4 projection, const glm::mat4& view);
 
@@ -60,4 +63,7 @@ public:
 		uint32_t size,
 		uint32_t sampleCount
 	);
+
+private:
+	static inline FrameBuffer s_ShadowFBO = FrameBuffer(false);
 };
